@@ -120,6 +120,7 @@ function Toast({ message, onClose }) {
    SECTIONS
    ══════════════════════════════════ */
 function Navbar({ active, onNav }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const links = [
     { id: "home", label: "الرئيسية" },
     { id: "mosques", label: "المساجد" },
@@ -134,12 +135,13 @@ function Navbar({ active, onNav }) {
       borderBottom: `1px solid ${T.border}`,
       padding: "0 48px", height: 64,
       display: "flex", alignItems: "center", justifyContent: "space-between",
-    }}>
+    }} className="navbar">
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: `linear-gradient(135deg, ${T.emerald}, ${T.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🕌</div>
         <span style={{ fontSize: 18, fontWeight: 800, color: T.emeraldDark }}>منصة المساجد</span>
       </div>
-      <div style={{ display: "flex", gap: 4 }}>
+      {/* Desktop links */}
+      <div className="nav-links" style={{ display: "flex", gap: 4 }}>
         {links.map(l => (
           <button key={l.id} onClick={() => onNav(l.id)} style={{
             padding: "8px 18px", borderRadius: 8, border: "none",
@@ -153,6 +155,32 @@ function Navbar({ active, onNav }) {
           >{l.label}</button>
         ))}
       </div>
+      {/* Mobile hamburger */}
+      <button className="nav-mobile-btn" onClick={() => setMobileOpen(!mobileOpen)} style={{
+        display: "none", alignItems: "center", justifyContent: "center",
+        width: 40, height: 40, borderRadius: 10, border: "none",
+        background: mobileOpen ? T.emeraldLight : "transparent",
+        cursor: "pointer", fontSize: 22,
+      }}>{mobileOpen ? "✕" : "☰"}</button>
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div style={{
+          position: "absolute", top: 64, left: 0, right: 0,
+          background: "rgba(255,255,255,.97)", backdropFilter: "blur(14px)",
+          borderBottom: `1px solid ${T.border}`,
+          display: "flex", flexDirection: "column", padding: "8px 16px", zIndex: 99,
+        }}>
+          {links.map(l => (
+            <button key={l.id} onClick={() => { onNav(l.id); setMobileOpen(false); }} style={{
+              padding: "14px 16px", borderRadius: 10, border: "none", textAlign: "right",
+              background: active === l.id ? T.emeraldLight : "transparent",
+              color: active === l.id ? T.emerald : T.text2,
+              fontWeight: active === l.id ? 700 : 500, fontSize: 15,
+              cursor: "pointer", fontFamily: "inherit",
+            }}>{l.label}</button>
+          ))}
+        </div>
+      )}
     </nav>
   );
 }
@@ -266,7 +294,7 @@ function PrayerTimesSection() {
   const currentTime = toArabicNum(pad2(now.getHours())) + ":" + toArabicNum(pad2(now.getMinutes())) + ":" + toArabicNum(pad2(now.getSeconds()));
 
   return (
-    <section style={{ padding: "70px 48px", background: T.white, position: "relative" }}>
+    <section style={{ padding: "70px 48px", background: T.white, position: "relative" }} className="section-prayers">
       <IslamicPattern opacity={0.025} />
       <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
@@ -300,7 +328,7 @@ function PrayerTimesSection() {
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 14 }}>
+        <div className="prayer-grid" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 14 }}>
           {labels.map((p, i) => {
             const isNext = i === nextIdx;
             const [ph, pm] = times24[p.key];
@@ -559,9 +587,10 @@ function AdhanPlayerSection() {
   );
 }
 
-function MosquesSection({ onSelect }) {
+function MosquesSection({ toast }) {
   const [search, setSearch] = useState("");
   const [filterCity, setFilterCity] = useState("الكل");
+  const [selectedMosque, setSelectedMosque] = useState(null);
 
   const filtered = MOSQUES.filter(m => {
     if (filterCity !== "الكل" && m.city !== filterCity) return false;
@@ -569,7 +598,7 @@ function MosquesSection({ onSelect }) {
   });
 
   return (
-    <section style={{ padding: "70px 48px", background: T.bg }}>
+    <section style={{ padding: "70px 48px", background: T.bg }} className="section-mosques">
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: "0 0 10px" }}>ابحث عن مسجد</h2>
@@ -577,14 +606,14 @@ function MosquesSection({ onSelect }) {
         </div>
 
         <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 20, flexWrap: "wrap" }}>
-          <div style={{ position: "relative", width: 340 }}>
+          <div style={{ position: "relative", width: 340, maxWidth: "100%" }}>
             <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", fontSize: 17, color: T.text3 }}>🔍</span>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="اسم المسجد أو الحي..."
               style={{ width: "100%", padding: "12px 44px 12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", background: T.white, boxSizing: "border-box" }}
               onFocus={e => e.target.style.borderColor = T.emerald} onBlur={e => e.target.style.borderColor = T.border}
             />
           </div>
-          <div style={{ display: "flex", gap: 4 }}>
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }} className="city-filters">
             {["الكل", ...CITIES].map(c => (
               <button key={c} onClick={() => setFilterCity(c)} style={{
                 padding: "10px 18px", borderRadius: 10, border: "none",
@@ -596,12 +625,12 @@ function MosquesSection({ onSelect }) {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 20 }} className="mosque-grid">
           {filtered.map(m => (
-            <div key={m.id} onClick={() => onSelect(m)} style={{
-              background: T.white, borderRadius: 18, padding: 24, cursor: "pointer",
+            <div key={m.id} style={{
+              background: T.white, borderRadius: 18, padding: 24,
               border: `1px solid ${T.border}`, transition: "all .2s",
-              boxShadow: "0 1px 8px rgba(0,0,0,.03)",
+              boxShadow: "0 1px 8px rgba(0,0,0,.03)", display: "flex", flexDirection: "column",
             }}
               onMouseEnter={e => { e.currentTarget.style.boxShadow = T.shadowLg; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = T.emerald + "44"; }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 1px 8px rgba(0,0,0,.03)"; e.currentTarget.style.transform = "none"; e.currentTarget.style.borderColor = T.border; }}
@@ -623,15 +652,84 @@ function MosquesSection({ onSelect }) {
                   <span key={i} style={{ padding: "3px 10px", borderRadius: 6, background: T.cream, fontSize: 11.5, color: T.text2, fontWeight: 500 }}>{s}</span>
                 ))}
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: T.text3 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: T.text3, marginBottom: 16 }}>
                 <span>👤 {m.imam}</span>
                 <span>السعة: {m.capacity}</span>
               </div>
+              <button onClick={() => setSelectedMosque(m)} style={{
+                marginTop: "auto", width: "100%", padding: "12px 20px", borderRadius: 12, border: "none",
+                background: T.emerald, color: T.white, fontSize: 14, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.emeraldDark; }}
+                onMouseLeave={e => { e.currentTarget.style.background = T.emerald; }}
+              >عرض التفاصيل</button>
             </div>
           ))}
         </div>
         {filtered.length === 0 && <div style={{ textAlign: "center", padding: 60, color: T.text3 }}><div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div><div style={{ fontSize: 15 }}>لا توجد نتائج مطابقة</div></div>}
       </div>
+
+      {/* Mosque Detail Modal */}
+      {selectedMosque && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setSelectedMosque(null)}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.5)", backdropFilter: "blur(4px)" }} />
+          <div onClick={e => e.stopPropagation()} style={{
+            position: "relative", background: T.white, borderRadius: 24, width: 680, maxWidth: "92vw",
+            maxHeight: "88vh", overflow: "auto", boxShadow: "0 24px 60px rgba(0,0,0,.2)", animation: "modalIn .25s ease",
+          }}>
+            {/* Header */}
+            <div style={{ background: `linear-gradient(135deg, ${T.emeraldDark}, ${T.emerald})`, padding: "28px 28px 32px", color: T.white, position: "relative" }}>
+              <IslamicPattern opacity={0.06} color="#fff" />
+              <button onClick={() => setSelectedMosque(null)} style={{
+                position: "absolute", top: 16, left: 16, background: "rgba(255,255,255,.15)", border: "none",
+                width: 36, height: 36, borderRadius: "50%", color: T.white, fontSize: 18, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1,
+              }}>✕</button>
+              <div style={{ position: "relative" }}>
+                <Badge text={selectedMosque.type} color="gold" />
+                <h2 style={{ fontSize: 26, fontWeight: 800, margin: "10px 0 6px" }}>{selectedMosque.name}</h2>
+                <p style={{ fontSize: 15, color: "rgba(255,255,255,.7)", margin: 0 }}>{selectedMosque.city} — {selectedMosque.district}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
+                  <Stars rating={selectedMosque.rating} />
+                  <span style={{ fontSize: 16, fontWeight: 700 }}>{selectedMosque.rating}</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,.6)" }}>({selectedMosque.reviews} تقييم)</span>
+                </div>
+              </div>
+            </div>
+            {/* Body */}
+            <div style={{ padding: 28 }}>
+              <div className="mosque-modal-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>بيانات المسجد</h3>
+                  <div style={{ display: "grid", gridTemplateColumns: "100px 1fr", gap: "12px 14px", fontSize: 14 }}>
+                    {[["الإمام", selectedMosque.imam], ["السعة", `${selectedMosque.capacity} مصلي`], ["المدينة", selectedMosque.city], ["الحي", selectedMosque.district], ["النوع", selectedMosque.type]].map(([l, v], i) => (
+                      <React.Fragment key={i}><span style={{ color: T.text2, fontWeight: 600 }}>{l}</span><span style={{ color: T.text }}>{v}</span></React.Fragment>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>الخدمات المتاحة</h3>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {selectedMosque.services.map((s, i) => <Badge key={i} text={s} color="green" />)}
+                  </div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, margin: "24px 0 16px", color: T.text }}>تقييم المسجد</h3>
+                  <RatingForm mosque={selectedMosque} toast={toast} />
+                  <h3 style={{ fontSize: 16, fontWeight: 700, margin: "24px 0 12px", color: T.text }}>الموقع</h3>
+                  <div style={{ height: 140, borderRadius: 14, background: `linear-gradient(135deg, ${T.emeraldLight}, #e7f1f8)`, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${T.border}` }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 30 }}>📍</div>
+                      <div style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>{selectedMosque.city} — {selectedMosque.district}</div>
+                      <div style={{ fontSize: 11, color: T.emerald, marginTop: 3, fontWeight: 600 }}>خريطة تفاعلية في النسخة الكاملة</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <style>{`@keyframes modalIn { from { opacity:0; transform:translateY(20px) scale(.96) } to { opacity:1; transform:none } }`}</style>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -658,63 +756,6 @@ function RatingForm({ mosque, toast }) {
   );
 }
 
-function MosqueDetail({ mosque, onBack, toast }) {
-  return (
-    <section style={{ padding: "40px 48px 70px", background: T.bg }}>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", fontSize: 15, color: T.emerald, cursor: "pointer", fontFamily: "inherit", fontWeight: 600, marginBottom: 20, display: "flex", alignItems: "center", gap: 6 }}>
-          → العودة لقائمة المساجد
-        </button>
-        <div style={{ background: T.white, borderRadius: 22, overflow: "hidden", border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
-          {/* Header */}
-          <div style={{ background: `linear-gradient(135deg, ${T.emeraldDark}, ${T.emerald})`, padding: "36px 36px 42px", color: T.white, position: "relative" }}>
-            <IslamicPattern opacity={0.06} color="#fff" />
-            <div style={{ position: "relative" }}>
-              <Badge text={mosque.type} color="gold" />
-              <h2 style={{ fontSize: 30, fontWeight: 800, margin: "10px 0 6px" }}>{mosque.name}</h2>
-              <p style={{ fontSize: 15, color: "rgba(255,255,255,.7)", margin: 0 }}>{mosque.city} — {mosque.district}</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
-                <Stars rating={mosque.rating} />
-                <span style={{ fontSize: 16, fontWeight: 700 }}>{mosque.rating}</span>
-                <span style={{ fontSize: 13, color: "rgba(255,255,255,.6)" }}>({mosque.reviews} تقييم)</span>
-              </div>
-            </div>
-          </div>
-          {/* Body */}
-          <div style={{ padding: 36 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
-              <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>بيانات المسجد</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "110px 1fr", gap: "14px 16px", fontSize: 14 }}>
-                  {[["الإمام", mosque.imam], ["السعة", `${mosque.capacity} مصلي`], ["المدينة", mosque.city], ["الحي", mosque.district], ["النوع", mosque.type]].map(([l, v], i) => (
-                    <React.Fragment key={i}><span style={{ color: T.text2, fontWeight: 600 }}>{l}</span><span style={{ color: T.text }}>{v}</span></React.Fragment>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>الخدمات المتاحة</h3>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {mosque.services.map((s, i) => <Badge key={i} text={s} color="green" />)}
-                </div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, margin: "28px 0 16px", color: T.text }}>تقييم المسجد</h3>
-                <RatingForm mosque={mosque} toast={toast} />
-                <h3 style={{ fontSize: 16, fontWeight: 700, margin: "28px 0 16px", color: T.text }}>الموقع</h3>
-                <div style={{ height: 180, borderRadius: 14, background: `linear-gradient(135deg, ${T.emeraldLight}, #e7f1f8)`, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${T.border}` }}>
-                  <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 36 }}>📍</div>
-                    <div style={{ fontSize: 13, color: T.text2, marginTop: 6 }}>{mosque.city} — {mosque.district}</div>
-                    <div style={{ fontSize: 12, color: T.emerald, marginTop: 4, fontWeight: 600 }}>خريطة تفاعلية في النسخة الكاملة</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function DonationsSection({ toast }) {
   const [projects, setProjects] = useState(DONATION_PROJECTS);
   const [donateModal, setDonateModal] = useState(null);
@@ -732,7 +773,7 @@ function DonationsSection({ toast }) {
   };
 
   return (
-    <section style={{ padding: "70px 48px", background: T.white, position: "relative" }}>
+    <section style={{ padding: "70px 48px", background: T.white, position: "relative" }} className="section-donate">
       <IslamicPattern opacity={0.02} />
       <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
@@ -741,7 +782,7 @@ function DonationsSection({ toast }) {
           <p style={{ color: T.text2, fontSize: 15, maxWidth: 500, margin: "0 auto" }}>تبرعك يصل مباشرة للمشاريع المعتمدة عبر بوابات دفع مرخصة</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 22 }}>
+        <div className="donate-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 22 }}>
           {projects.map(p => {
             const pct = Math.round(p.collected / p.target * 100);
             return (
@@ -877,7 +918,7 @@ function ComplaintSection({ toast }) {
   const reset = () => { setForm({ mosque: "", type: "", desc: "", name: "", phone: "" }); setSubmitted(false); setRefNum(""); };
 
   return (
-    <section style={{ padding: "70px 48px", background: T.bg }}>
+    <section style={{ padding: "70px 48px", background: T.bg }} className="section-complaint">
       <div style={{ maxWidth: 700, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: "0 0 10px" }}>بلاغ أو تقييم</h2>
@@ -958,10 +999,10 @@ function AboutSection() {
     { q: "كيف يتم تحديد مواقيت الصلاة؟", a: "يتم حساب المواقيت وفق تقويم أم القرى المعتمد من المملكة العربية السعودية." },
   ];
   return (
-    <section style={{ padding: "70px 48px", background: T.white, position: "relative" }}>
+    <section style={{ padding: "70px 48px", background: T.white, position: "relative" }} className="section-about">
       <IslamicPattern opacity={0.02} />
       <div style={{ maxWidth: 900, margin: "0 auto", position: "relative" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
+        <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 2, marginBottom: 8 }}>عن المنصة</div>
             <h2 style={{ fontSize: 28, fontWeight: 800, color: T.text, margin: "0 0 16px" }}>منصة المساجد</h2>
@@ -999,7 +1040,7 @@ function Footer() {
     <footer style={{ background: T.emeraldDark, color: "rgba(255,255,255,.7)", padding: "50px 48px 30px", position: "relative" }}>
       <IslamicPattern opacity={0.04} color="#fff" />
       <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 40, marginBottom: 40 }}>
+        <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 40, marginBottom: 40 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
               <div style={{ width: 36, height: 36, borderRadius: 9, background: `linear-gradient(135deg, ${T.emerald}, ${T.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🕌</div>
@@ -1044,18 +1085,14 @@ function Footer() {
    ══════════════════════════════════ */
 export default function PublicWebsite() {
   const [page, setPage] = useState("home");
-  const [selectedMosque, setSelectedMosque] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
 
   const refs = { home: useRef(), prayers: useRef(), mosques: useRef(), donate: useRef(), complaint: useRef() };
 
   const scrollTo = (id) => {
     setPage(id);
-    setSelectedMosque(null);
     setTimeout(() => refs[id]?.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
-
-  const openMosque = (m) => { setSelectedMosque(m); setPage("mosques"); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   return (
     <div dir="rtl" style={{ fontFamily: "'Tajawal', 'Noto Sans Arabic', sans-serif", background: T.bg, color: T.text, minHeight: "100vh" }}>
@@ -1064,6 +1101,24 @@ export default function PublicWebsite() {
         ::selection { background: ${T.emeraldLight}; color: ${T.emeraldDark} }
         ::-webkit-scrollbar { width:7px } ::-webkit-scrollbar-track { background:${T.bg} } ::-webkit-scrollbar-thumb { background:${T.border}; border-radius:4px }
         input::placeholder, textarea::placeholder { color: ${T.text3} }
+        @media (max-width: 768px) {
+          .section-mosques, .section-prayers, .section-donate, .section-complaint, .section-about { padding-left: 16px !important; padding-right: 16px !important; }
+          .mosque-grid { grid-template-columns: 1fr !important; }
+          .mosque-modal-grid { grid-template-columns: 1fr !important; }
+          .prayer-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .nav-links { display: none !important; }
+          .nav-mobile-btn { display: flex !important; }
+          .hero-section { padding-left: 20px !important; padding-right: 20px !important; }
+          .hero-content { grid-template-columns: 1fr !important; text-align: center; }
+          .hero-stats { justify-content: center; }
+          .donate-grid { grid-template-columns: 1fr !important; }
+          .footer-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+          .about-grid { grid-template-columns: 1fr !important; }
+          .city-filters { gap: 4px !important; }
+        }
+        @media (max-width: 480px) {
+          .prayer-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
       `}</style>
 
       <Navbar active={page} onNav={scrollTo} />
@@ -1072,7 +1127,7 @@ export default function PublicWebsite() {
       <div ref={refs.prayers}><PrayerTimesSection /></div>
       <AdhanPlayerSection />
       <div ref={refs.mosques}>
-        {selectedMosque ? <MosqueDetail mosque={selectedMosque} onBack={() => setSelectedMosque(null)} toast={msg => setToastMsg(msg)} /> : <MosquesSection onSelect={openMosque} />}
+        <MosquesSection toast={msg => setToastMsg(msg)} />
       </div>
       <div ref={refs.donate}><DonationsSection toast={msg => setToastMsg(msg)} /></div>
       <div ref={refs.complaint}><ComplaintSection toast={msg => setToastMsg(msg)} /></div>

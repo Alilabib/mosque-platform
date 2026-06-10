@@ -91,7 +91,7 @@ function Dashboard({mosques,tickets,complaints,khutbahs,donations}){
   const tkByType={};tickets.forEach(t=>{tkByType[t.type]=(tkByType[t.type]||0)+1;});
   const tkData=Object.entries(tkByType).map(([l,v])=>({l,v,color:C.info}));
   return<div style={{display:"flex",flexDirection:"column",gap:20}}>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
+    <div className="admin-stat-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
       <Stat icon="🕌" label="المساجد" value={mosques.length} sub={`${active} نشط`} bg={C.primaryLight}/>
       <Stat icon="📡" label="أجهزة متصلة" value={`${devOn}/${mosques.length}`} sub={`${Math.round(devOn/mosques.length*100)}%`} bg={C.infoLight}/>
       <Stat icon="🔧" label="تذاكر مفتوحة" value={openTk} sub={urgTk?`${urgTk} عاجلة`:""} bg={C.warnLight}/>
@@ -99,11 +99,11 @@ function Dashboard({mosques,tickets,complaints,khutbahs,donations}){
       <Stat icon="📜" label="اطلاع الخطبة" value={khutbahs[0]?`${khutbahs[0].viewed}/${khutbahs[0].total}`:"—"} bg={C.accentLight}/>
       <Stat icon="💰" label="التبرعات" value={`${(totalDon/1e6).toFixed(2)} م`} sub="ريال" bg="#f0e6f6"/>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+    <div className="admin-stat-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
       <Card title="المساجد حسب المدينة"><BarChart data={cityData} height={150}/></Card>
       <Card title="حالة المساجد"><DonutChart data={statusData}/></Card>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+    <div className="admin-stat-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
       <Card title="مواقيت الصلاة — الرياض">{PRAYERS.map((p,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderRadius:9,background:!p.done?C.primaryLight:"#fafaf8",marginBottom:4}}><span style={{fontWeight:700,fontSize:13,width:50,color:!p.done?C.primary:C.text}}>{p.name}</span><span style={{fontSize:12.5,color:C.text2,width:42}}>{p.adhan}</span><span style={{fontSize:12.5,color:C.text2,width:42}}>{p.iqama}</span><span style={{marginRight:"auto"}}><Badge text={p.done?"تم":"قادم"} color={p.done?"green":"blue"}/></span></div>)}</Card>
       <Card title="التذاكر حسب النوع"><BarChart data={tkData} height={150} color={C.info}/></Card>
     </div>
@@ -228,23 +228,66 @@ function AdhanPage({toast}){
   const[uploadForm,setUploadForm]=useState({name:"",muezzin:"",type:"أذان عام"});
   const[uploadedFile,setUploadedFile]=useState(null);
   const[playing,setPlaying]=useState(null);
+  const[progress,setProgress]=useState(0);
   const[voices,setVoices]=useState([
-    {id:1,name:"أذان الحرم المكي ١",muezzin:"الشيخ السديس",type:"أذان عام",duration:"٤:١٢",status:"معتمد"},
-    {id:2,name:"أذان الحرم المكي ٢",muezzin:"الشيخ علي الملا",type:"أذان عام",duration:"٤:٣٥",status:"معتمد"},
-    {id:3,name:"أذان الفجر",muezzin:"الشيخ المعيقلي",type:"أذان فجر",duration:"٤:٤٨",status:"معتمد"},
-    {id:4,name:"إقامة ١",muezzin:"الشيخ السديس",type:"إقامة",duration:"٠:٤٥",status:"معتمد"},
-    {id:5,name:"أذان تجريبي",muezzin:"تجريبي",type:"تجريبي",duration:"٤:٠٠",status:"قيد المراجعة"},
+    {id:1,name:"أذان الحرم المكي ١",muezzin:"الشيخ السديس",type:"أذان عام",duration:"٤:١٢",status:"معتمد",baseFreq:220,scale:[0,1,4,5,7,8,11,12]},
+    {id:2,name:"أذان الحرم المكي ٢",muezzin:"الشيخ علي الملا",type:"أذان عام",duration:"٤:٣٥",status:"معتمد",baseFreq:196,scale:[0,2,3,5,7,9,10,12]},
+    {id:3,name:"أذان الفجر",muezzin:"الشيخ المعيقلي",type:"أذان فجر",duration:"٤:٤٨",status:"معتمد",baseFreq:185,scale:[0,1,3,5,7,8,10,12]},
+    {id:4,name:"إقامة ١",muezzin:"الشيخ السديس",type:"إقامة",duration:"٠:٤٥",status:"معتمد",baseFreq:262,scale:[0,2,4,5,7,9,11,12]},
+    {id:5,name:"أذان تجريبي",muezzin:"تجريبي",type:"تجريبي",duration:"٤:٠٠",status:"قيد المراجعة",baseFreq:240,scale:[0,2,3,5,7,9,10,12]},
   ]);
   const fileRef=useRef(null);
+  const audioRef=useRef(null);
+  const oscRef=useRef(null);
+  const noteTimerRef=useRef(null);
+  const progressTimerRef=useRef(null);
+  const noteIdxRef=useRef(0);
+
+  const playVoice=(v)=>{
+    if(playing===v.id){stopVoice();return;}
+    stopVoice();
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const gain=ctx.createGain();gain.gain.value=0.25;gain.connect(ctx.destination);
+    audioRef.current={ctx,gain};
+    setPlaying(v.id);setProgress(0);noteIdxRef.current=0;
+    const playNote=()=>{
+      if(oscRef.current)try{oscRef.current.stop();}catch(e){}
+      const idx=noteIdxRef.current;
+      const s=v.scale||[0,2,4,5,7,9,11,12];
+      const semi=s[idx%s.length];
+      const freq=(v.baseFreq||220)*Math.pow(2,semi/12);
+      const osc=ctx.createOscillator();osc.type="sine";
+      osc.frequency.setValueAtTime(freq,ctx.currentTime);
+      const env=ctx.createGain();
+      env.gain.setValueAtTime(0,ctx.currentTime);
+      env.gain.linearRampToValueAtTime(0.22,ctx.currentTime+0.12);
+      env.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+1.1);
+      osc.connect(env);env.connect(gain);
+      osc.start(ctx.currentTime);osc.stop(ctx.currentTime+1.2);
+      oscRef.current=osc;noteIdxRef.current++;
+    };
+    playNote();
+    noteTimerRef.current=setInterval(playNote,1300);
+    progressTimerRef.current=setInterval(()=>{
+      setProgress(p=>{if(p>=100){stopVoice();return 0;}return p+0.5;});
+    },200);
+  };
+  const stopVoice=()=>{
+    setPlaying(null);setProgress(0);
+    if(noteTimerRef.current)clearInterval(noteTimerRef.current);
+    if(progressTimerRef.current)clearInterval(progressTimerRef.current);
+    if(oscRef.current)try{oscRef.current.stop();}catch(e){}
+    if(audioRef.current?.ctx)try{audioRef.current.ctx.close();}catch(e){}
+  };
+  useEffect(()=>()=>stopVoice(),[]);
 
   const handleFileSelect=()=>{
-    // Simulate file selection
     setUploadedFile({name:"adhan_new.mp3",size:"3.2 MB",duration:"٤:٢٥"});
     toast("تم اختيار الملف ✓","success");
   };
   const submitUpload=()=>{
     if(!uploadForm.name||!uploadForm.muezzin||!uploadedFile)return;
-    setVoices(p=>[...p,{id:Date.now(),name:uploadForm.name,muezzin:uploadForm.muezzin,type:uploadForm.type,duration:uploadedFile.duration,status:"قيد المراجعة"}]);
+    setVoices(p=>[...p,{id:Date.now(),name:uploadForm.name,muezzin:uploadForm.muezzin,type:uploadForm.type,duration:uploadedFile.duration,status:"قيد المراجعة",baseFreq:220,scale:[0,1,4,5,7,8,11,12]}]);
     setUploadModal(false);setUploadForm({name:"",muezzin:"",type:"أذان عام"});setUploadedFile(null);
     toast("تم رفع الصوت — بانتظار الاعتماد ✓","success");
   };
@@ -266,13 +309,13 @@ function AdhanPage({toast}){
           {voices.map(v=><option key={v.id} value={v.name}>{v.name} — {v.muezzin}</option>)}
         </select>
         <Badge text={p.done?"تم التشغيل":"مجدول"} color={p.done?"green":"blue"}/>
-        <button onClick={()=>{toast(`تم تشغيل الأذان يدوياً — ${p.name} ✓`,"success");}} style={{padding:"4px 10px",borderRadius:6,border:`1px solid ${C.primary}`,background:"transparent",color:C.primary,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>▶ تشغيل</button>
+        <button onClick={()=>{playVoice({id:`prayer-${i}`,baseFreq:220,scale:[0,1,4,5,7,8,11,12]});toast(`تم تشغيل الأذان — ${p.name} ✓`,"success");}} style={{padding:"4px 10px",borderRadius:6,border:`1px solid ${C.primary}`,background:"transparent",color:C.primary,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{playing===`prayer-${i}`?"⏹ إيقاف":"▶ تشغيل"}</button>
       </div>)}
     </Card>}
     {tab==="library"&&<Card title={`مكتبة الأصوات (${voices.length})`} noPad>
       <Table cols={[
-        {label:"",render:r=><button onClick={e=>{e.stopPropagation();setPlaying(playing===r.id?null:r.id);}} style={{width:32,height:32,borderRadius:"50%",background:playing===r.id?C.danger:C.primary,color:C.white,border:"none",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{playing===r.id?"⏸":"▶"}</button>},
-        {label:"الاسم",render:r=><div><span style={{fontWeight:600,display:"block"}}>{r.name}</span>{playing===r.id&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:6}}><div style={{width:100,height:4,background:C.borderL,borderRadius:2,overflow:"hidden"}}><div style={{width:"45%",height:"100%",background:C.primary,borderRadius:2,transition:"width 2s linear"}}/></div><span style={{fontSize:10,color:C.text3}}>١:٥٤ / {r.duration}</span></div>}</div>},
+        {label:"",render:r=><button onClick={e=>{e.stopPropagation();playVoice(r);}} style={{width:32,height:32,borderRadius:"50%",background:playing===r.id?C.danger:C.primary,color:C.white,border:"none",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{playing===r.id?"⏹":"▶"}</button>},
+        {label:"الاسم",render:r=><div><span style={{fontWeight:600,display:"block"}}>{r.name}</span>{playing===r.id&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:6}}><div style={{width:100,height:4,background:C.borderL,borderRadius:2,overflow:"hidden"}}><div style={{width:`${progress}%`,height:"100%",background:C.primary,borderRadius:2,transition:"width .2s linear"}}/></div><span style={{fontSize:10,color:C.text3}}>{Math.floor(progress*2.5/60)}:{String(Math.floor(progress*2.5)%60).padStart(2,"0")} / {r.duration}</span></div>}</div>},
         {label:"المؤذن",render:r=>r.muezzin},
         {label:"النوع",render:r=><Badge text={r.type} color="blue"/>},
         {label:"المدة",render:r=>r.duration},
@@ -296,8 +339,8 @@ function AdhanPage({toast}){
             <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontSize:14}}>{uploadedFile.name}</div><div style={{fontSize:12,color:C.text2}}>{uploadedFile.size} · {uploadedFile.duration}</div></div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}>
-            <button onClick={e=>{e.stopPropagation();setPlaying(playing==="preview"?null:"preview");}} style={{width:32,height:32,borderRadius:"50%",background:playing==="preview"?C.danger:C.primary,color:C.white,border:"none",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{playing==="preview"?"⏸":"▶"}</button>
-            <div style={{flex:1,height:4,background:C.borderL,borderRadius:2,overflow:"hidden"}}><div style={{width:playing==="preview"?"60%":"0%",height:"100%",background:C.primary,borderRadius:2,transition:"width 3s linear"}}/></div>
+            <button onClick={e=>{e.stopPropagation();playVoice({id:"preview",baseFreq:220,scale:[0,1,4,5,7,8,11,12]});}} style={{width:32,height:32,borderRadius:"50%",background:playing==="preview"?C.danger:C.primary,color:C.white,border:"none",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{playing==="preview"?"⏹":"▶"}</button>
+            <div style={{flex:1,height:4,background:C.borderL,borderRadius:2,overflow:"hidden"}}><div style={{width:playing==="preview"?`${progress}%`:"0%",height:"100%",background:C.primary,borderRadius:2,transition:"width .2s linear"}}/></div>
             <span style={{fontSize:11,color:C.text3}}>{uploadedFile.duration}</span>
           </div></div>
           :<div><div style={{fontSize:28,marginBottom:8}}>📁</div><div style={{fontSize:14,color:C.text2,marginBottom:4}}>انقر لاختيار ملف صوتي</div><div style={{fontSize:12,color:C.text3}}>MP3, WAV, M4A — حد أقصى 20 MB</div></div>}
@@ -372,31 +415,57 @@ export default function App(){
   }};
   const unread=notifs.filter(n=>!n.read).length;
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return<div dir="rtl" style={{fontFamily:FONT,display:"flex",height:"100vh",background:C.bg,color:C.text,overflow:"hidden"}}>
-    <style>{`@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700;800&display=swap');*{box-sizing:border-box}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:${C.border};border-radius:3px}`}</style>
-    <aside style={{width:collapsed?66:230,background:C.sidebar,display:"flex",flexDirection:"column",transition:"width .25s",flexShrink:0,overflow:"hidden"}}>
-      <div style={{padding:collapsed?"16px 8px":"16px 18px",borderBottom:"1px solid rgba(255,255,255,.07)",display:"flex",alignItems:"center",gap:10,minHeight:62}}>
+    <style>{`@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700;800&display=swap');*{box-sizing:border-box}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:${C.border};border-radius:3px}
+      .admin-sidebar { display: flex; }
+      .admin-hamburger { display: none; }
+      .admin-sidebar-overlay { display: none; }
+      @media (max-width: 768px) {
+        .admin-sidebar { display: none !important; }
+        .admin-sidebar.mobile-open { display: flex !important; position: fixed !important; top: 0; right: 0; bottom: 0; width: 260px !important; z-index: 200; box-shadow: -4px 0 24px rgba(0,0,0,.3); }
+        .admin-sidebar-overlay.mobile-open { display: block !important; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 199; }
+        .admin-hamburger { display: flex !important; }
+        .admin-main-content { padding: 14px !important; }
+        .admin-header-date { display: none !important; }
+        .admin-header-user-info { display: none !important; }
+        .admin-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      }
+      @media (max-width: 480px) {
+        .admin-stat-grid { grid-template-columns: 1fr !important; }
+      }
+    `}</style>
+
+    {/* Mobile overlay */}
+    <div className={`admin-sidebar-overlay ${mobileMenuOpen ? "mobile-open" : ""}`} onClick={() => setMobileMenuOpen(false)} />
+
+    <aside className={`admin-sidebar ${mobileMenuOpen ? "mobile-open" : ""}`} style={{width:collapsed&&!mobileMenuOpen?66:230,background:C.sidebar,flexDirection:"column",transition:"width .25s",flexShrink:0,overflow:"hidden"}}>
+      <div style={{padding:collapsed&&!mobileMenuOpen?"16px 8px":"16px 18px",borderBottom:"1px solid rgba(255,255,255,.07)",display:"flex",alignItems:"center",gap:10,minHeight:62}}>
         <div style={{width:36,height:36,borderRadius:9,background:`linear-gradient(135deg,${C.primary},${C.accent})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>🕌</div>
-        {!collapsed&&<div><div style={{color:"#fff",fontSize:14,fontWeight:800}}>منصة المساجد</div><div style={{color:"rgba(255,255,255,.4)",fontSize:10}}>MVP v1.0</div></div>}
+        {(!collapsed||mobileMenuOpen)&&<div><div style={{color:"#fff",fontSize:14,fontWeight:800}}>منصة المساجد</div><div style={{color:"rgba(255,255,255,.4)",fontSize:10}}>MVP v1.0</div></div>}
       </div>
       <nav style={{flex:1,padding:"8px 6px",display:"flex",flexDirection:"column",gap:1,overflowY:"auto"}}>
-        {MODULES.map(m=><button key={m.id} onClick={()=>setPage(m.id)} style={{display:"flex",alignItems:"center",gap:10,padding:collapsed?"10px 0":"9px 13px",justifyContent:collapsed?"center":"flex-start",borderRadius:8,border:"none",background:page===m.id?C.sidebarActive:"transparent",color:page===m.id?"#fff":"rgba(255,255,255,.55)",fontSize:13,fontWeight:page===m.id?700:400,cursor:"pointer",fontFamily:"inherit",width:"100%",textAlign:"right"}} onMouseEnter={e=>{if(page!==m.id)e.currentTarget.style.background=C.sidebarHover}} onMouseLeave={e=>{if(page!==m.id)e.currentTarget.style.background="transparent"}}><span style={{fontSize:16,flexShrink:0}}>{m.icon}</span>{!collapsed&&<span>{m.label}</span>}</button>)}
+        {MODULES.map(m=><button key={m.id} onClick={()=>{setPage(m.id);setMobileMenuOpen(false);}} style={{display:"flex",alignItems:"center",gap:10,padding:collapsed&&!mobileMenuOpen?"10px 0":"9px 13px",justifyContent:collapsed&&!mobileMenuOpen?"center":"flex-start",borderRadius:8,border:"none",background:page===m.id?C.sidebarActive:"transparent",color:page===m.id?"#fff":"rgba(255,255,255,.55)",fontSize:13,fontWeight:page===m.id?700:400,cursor:"pointer",fontFamily:"inherit",width:"100%",textAlign:"right"}} onMouseEnter={e=>{if(page!==m.id)e.currentTarget.style.background=C.sidebarHover}} onMouseLeave={e=>{if(page!==m.id)e.currentTarget.style.background="transparent"}}><span style={{fontSize:16,flexShrink:0}}>{m.icon}</span>{(!collapsed||mobileMenuOpen)&&<span>{m.label}</span>}</button>)}
       </nav>
-      <button onClick={()=>setCollapsed(!collapsed)} style={{padding:11,border:"none",borderTop:"1px solid rgba(255,255,255,.07)",background:"transparent",color:"rgba(255,255,255,.35)",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>{collapsed?"◂":"▸ طي"}</button>
+      <button onClick={()=>{if(mobileMenuOpen){setMobileMenuOpen(false)}else{setCollapsed(!collapsed)}}} style={{padding:11,border:"none",borderTop:"1px solid rgba(255,255,255,.07)",background:"transparent",color:"rgba(255,255,255,.35)",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>{mobileMenuOpen?"✕ إغلاق":collapsed?"◂":"▸ طي"}</button>
     </aside>
     <main style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <header style={{height:58,background:C.card,borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 22px",flexShrink:0}}>
-        <span style={{fontSize:16,fontWeight:700}}>{MODULES.find(m=>m.id===page)?.icon} {MODULES.find(m=>m.id===page)?.label}</span>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <button className="admin-hamburger" onClick={()=>setMobileMenuOpen(!mobileMenuOpen)} style={{display:"none",alignItems:"center",justifyContent:"center",width:36,height:36,borderRadius:8,border:"none",background:"transparent",cursor:"pointer",fontSize:20}}>{mobileMenuOpen?"✕":"☰"}</button>
+          <span style={{fontSize:16,fontWeight:700}}>{MODULES.find(m=>m.id===page)?.icon} {MODULES.find(m=>m.id===page)?.label}</span>
+        </div>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <span style={{fontSize:12,color:C.text2}}>٨ يونيو ٢٠٢٦</span>
+          <span className="admin-header-date" style={{fontSize:12,color:C.text2}}>٨ يونيو ٢٠٢٦</span>
           <div style={{position:"relative"}}><button onClick={()=>setNotifOpen(!notifOpen)} style={{background:"none",border:"none",fontSize:19,cursor:"pointer",padding:3}}>🔔{unread>0&&<span style={{position:"absolute",top:-2,left:-2,width:15,height:15,borderRadius:"50%",background:C.danger,color:C.white,fontSize:9.5,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</span>}</button>
-            {notifOpen&&<div style={{position:"absolute",left:0,top:"110%",width:320,background:C.card,borderRadius:14,boxShadow:"0 8px 30px rgba(0,0,0,.12)",border:`1px solid ${C.border}`,zIndex:100,overflow:"hidden"}}><div style={{padding:"10px 14px",borderBottom:`1px solid ${C.borderL}`,fontWeight:700,fontSize:13,display:"flex",justifyContent:"space-between"}}>التنبيهات<button onClick={()=>setNotifs(p=>p.map(n=>({...n,read:true})))} style={{background:"none",border:"none",fontSize:11,color:C.primary,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>قراءة الكل</button></div>{notifs.map(n=><div key={n.id} style={{padding:"10px 14px",borderBottom:`1px solid ${C.borderL}`,background:n.read?"transparent":C.primaryLight+"44",cursor:"pointer"}} onClick={()=>setNotifs(p=>p.map(x=>x.id===n.id?{...x,read:true}:x))}><div style={{fontSize:12.5,lineHeight:1.5}}>{n.text}</div><div style={{fontSize:10.5,color:C.text3,marginTop:2}}>{n.time}</div></div>)}</div>}
+            {notifOpen&&<div style={{position:"absolute",left:0,top:"110%",width:320,maxWidth:"90vw",background:C.card,borderRadius:14,boxShadow:"0 8px 30px rgba(0,0,0,.12)",border:`1px solid ${C.border}`,zIndex:100,overflow:"hidden"}}><div style={{padding:"10px 14px",borderBottom:`1px solid ${C.borderL}`,fontWeight:700,fontSize:13,display:"flex",justifyContent:"space-between"}}>التنبيهات<button onClick={()=>setNotifs(p=>p.map(n=>({...n,read:true})))} style={{background:"none",border:"none",fontSize:11,color:C.primary,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>قراءة الكل</button></div>{notifs.map(n=><div key={n.id} style={{padding:"10px 14px",borderBottom:`1px solid ${C.borderL}`,background:n.read?"transparent":C.primaryLight+"44",cursor:"pointer"}} onClick={()=>setNotifs(p=>p.map(x=>x.id===n.id?{...x,read:true}:x))}><div style={{fontSize:12.5,lineHeight:1.5}}>{n.text}</div><div style={{fontSize:10.5,color:C.text3,marginTop:2}}>{n.time}</div></div>)}</div>}
           </div>
           <div style={{width:1,height:24,background:C.border}}/>
-          <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:32,height:32,borderRadius:"50%",background:C.primaryLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:C.primary}}>أ</div><div><div style={{fontSize:12.5,fontWeight:600}}>أحمد العمري</div><div style={{fontSize:10,color:C.text2}}>Super Admin</div></div></div>
+          <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:32,height:32,borderRadius:"50%",background:C.primaryLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:C.primary}}>أ</div><div className="admin-header-user-info"><div style={{fontSize:12.5,fontWeight:600}}>أحمد العمري</div><div style={{fontSize:10,color:C.text2}}>Super Admin</div></div></div>
         </div>
       </header>
-      <div style={{flex:1,overflow:"auto",padding:22}} onClick={()=>notifOpen&&setNotifOpen(false)}>{render()}</div>
+      <div className="admin-main-content" style={{flex:1,overflow:"auto",padding:22}} onClick={()=>notifOpen&&setNotifOpen(false)}>{render()}</div>
     </main>
     {toastMsg&&<Toast msg={toastMsg.m} type={toastMsg.t} onClose={()=>setToastMsg(null)}/>}
   </div>;
