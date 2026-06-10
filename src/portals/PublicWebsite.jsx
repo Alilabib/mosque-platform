@@ -704,7 +704,7 @@ function MosquesSection({ toast }) {
                   <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>بيانات المسجد</h3>
                   <div style={{ display: "grid", gridTemplateColumns: "100px 1fr", gap: "12px 14px", fontSize: 14 }}>
                     {[["الإمام", selectedMosque.imam], ["السعة", `${selectedMosque.capacity} مصلي`], ["المدينة", selectedMosque.city], ["الحي", selectedMosque.district], ["النوع", selectedMosque.type]].map(([l, v], i) => (
-                      <React.Fragment key={i}><span style={{ color: T.text2, fontWeight: 600 }}>{l}</span><span style={{ color: T.text }}>{v}</span></React.Fragment>
+                      <div key={i} style={{ display: "contents" }}><span style={{ color: T.text2, fontWeight: 600 }}>{l}</span><span style={{ color: T.text }}>{v}</span></div>
                     ))}
                   </div>
                 </div>
