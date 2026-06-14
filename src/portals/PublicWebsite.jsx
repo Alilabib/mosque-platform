@@ -363,24 +363,26 @@ function PrayerTimesSection() {
   );
 }
 
+const AZAN_VOICES = [
+  { id: 1, name: "مشاري العفاسي", src: "https://cdn.aladhan.com/audio/adhans/a9.mp3" },
+  { id: 2, name: "أحمد النفيس", src: "https://cdn.aladhan.com/audio/adhans/a1.mp3" },
+  { id: 3, name: "حافظ مصطفى أوزجان", src: "https://cdn.aladhan.com/audio/adhans/a2.mp3" },
+  { id: 4, name: "العفاسي — دبي ون", src: "https://cdn.aladhan.com/audio/adhans/a4.mp3" },
+  { id: 5, name: "منصور الزهراني", src: "https://cdn.aladhan.com/audio/adhans/a11-mansour-al-zahrani.mp3" },
+];
+
 function AdhanPlayerSection() {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [enabled, setEnabled] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [enabled, setEnabled] = useState(false); // browser requires user click first
   const [progress, setProgress] = useState(0);
-  const [eqBars, setEqBars] = useState([3,5,7,4,6,8,5,3,6,4,7,5]);
+  const [duration, setDuration] = useState(0);
+  const [selectedVoice, setSelectedVoice] = useState(0);
   const [currentPrayer, setCurrentPrayer] = useState(null);
+  const [showVoiceSelector, setShowVoiceSelector] = useState(false);
   const [now, setNow] = useState(new Date());
-  const audioCtxRef = useRef(null);
-  const gainRef = useRef(null);
-  const oscRef = useRef(null);
-  const noteIntervalRef = useRef(null);
-  const progressIntervalRef = useRef(null);
-  const noteIndexRef = useRef(0);
+  const audioRef = useRef(null);
   const triggeredRef = useRef({});
-
-  // Admin-assigned voice (simulating what admin set)
-  const assignedVoice = { name: "أذان الحرم المكي", muezzin: "الشيخ السديس", style: "مقام حجاز", baseFreq: 220, scale: [0, 1, 4, 5, 7, 8, 11, 12] };
 
   const prayerNames = { fajr: "الفجر", dhuhr: "الظهر", asr: "العصر", maghrib: "المغرب", isha: "العشاء" };
 
@@ -400,12 +402,10 @@ function AdhanPlayerSection() {
     for (const p of prayers) {
       const [ph, pm] = times24[p];
       const key = `${p}-${ph}-${pm}`;
-      // Trigger when time matches (within first 3 seconds of the minute)
       if (h === ph && m === pm && s < 3 && !triggeredRef.current[key] && !isPlaying) {
         triggeredRef.current[key] = true;
         setCurrentPrayer(p);
         startAdhan();
-        // Reset trigger after 2 minutes
         setTimeout(() => { delete triggeredRef.current[key]; }, 120000);
         break;
       }
@@ -414,59 +414,38 @@ function AdhanPlayerSection() {
 
   const startAdhan = () => {
     if (isPlaying) return;
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    audioCtxRef.current = ctx;
-    const gain = ctx.createGain();
-    gain.gain.value = 0.25;
-    gain.connect(ctx.destination);
-    gainRef.current = gain;
-
-    setIsPlaying(true);
-    setProgress(0);
-    noteIndexRef.current = 0;
-
-    const playNote = () => {
-      if (oscRef.current) try { oscRef.current.stop(); } catch(e) {}
-      const idx = noteIndexRef.current;
-      const scaleIdx = idx % assignedVoice.scale.length;
-      const semitone = assignedVoice.scale[scaleIdx];
-      const freq = assignedVoice.baseFreq * Math.pow(2, semitone / 12);
-
-      const osc = ctx.createOscillator();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      const env = ctx.createGain();
-      env.gain.setValueAtTime(0, ctx.currentTime);
-      env.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.15);
-      env.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
-      osc.connect(env);
-      env.connect(gain);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 1.3);
-      oscRef.current = osc;
-      noteIndexRef.current++;
-    };
-
-    playNote();
-    noteIntervalRef.current = setInterval(playNote, 1400);
-    progressIntervalRef.current = setInterval(() => {
-      setProgress(prev => { if (prev >= 100) { stopAdhan(); return 0; } return prev + 0.4; });
-      setEqBars(prev => prev.map(() => 2 + Math.random() * 8));
-    }, 200);
-
-    // Auto-stop after ~4 minutes
-    setTimeout(() => stopAdhan(), 240000);
+    stopAdhan();
+    const audio = new Audio(AZAN_VOICES[selectedVoice].src);
+    audioRef.current = audio;
+    audio.addEventListener("timeupdate", () => {
+      if (audio.duration) {
+        setProgress((audio.currentTime / audio.duration) * 100);
+        setDuration(audio.duration);
+      }
+    });
+    audio.addEventListener("ended", () => {
+      setIsPlaying(false);
+      setProgress(0);
+      setDuration(0);
+      setCurrentPrayer(null);
+      audioRef.current = null;
+    });
+    audio.play().then(() => {
+      setIsPlaying(true);
+      setProgress(0);
+    }).catch(() => {});
   };
 
   const stopAdhan = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
     setIsPlaying(false);
     setProgress(0);
+    setDuration(0);
     setCurrentPrayer(null);
-    setEqBars([3,5,7,4,6,8,5,3,6,4,7,5]);
-    if (noteIntervalRef.current) clearInterval(noteIntervalRef.current);
-    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-    if (oscRef.current) try { oscRef.current.stop(); } catch(e) {}
-    if (audioCtxRef.current) try { audioCtxRef.current.close(); } catch(e) {}
   };
 
   useEffect(() => () => stopAdhan(), []);
@@ -488,6 +467,13 @@ function AdhanPlayerSection() {
   }
   if (!nextPrayer) { nextPrayer = "fajr"; const [fh, fm] = times24.fajr; minUntilNext = (24 * 60 - nowMin) + fh * 60 + fm; }
 
+  const formatTime = (sec) => {
+    if (!sec || !isFinite(sec)) return "0:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
   return (
     <section style={{ padding: "50px 48px", background: `linear-gradient(180deg, ${T.emeraldDark} 0%, #062e22 100%)`, position: "relative" }}>
       <IslamicPattern opacity={0.04} color="#fff" />
@@ -500,14 +486,13 @@ function AdhanPlayerSection() {
               <div style={{ width: 50, height: 50, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #d4a730)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, animation: "spin 3s linear infinite" }}>🔊</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 18, fontWeight: 800, color: T.white }}>الأذان يُرفع الآن — {currentPrayer ? prayerNames[currentPrayer] : ""}</div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,.5)", marginTop: 2 }}>{assignedVoice.name} · {assignedVoice.muezzin}</div>
-                <div style={{ display: "flex", alignItems: "end", gap: 2, height: 20, marginTop: 8 }}>
-                  {eqBars.map((h, i) => (
-                    <div key={i} style={{ flex: 1, height: `${h * 2}px`, maxHeight: 20, background: `linear-gradient(180deg, ${T.goldSoft}, ${T.gold})`, borderRadius: 1.5, transition: "height .15s" }} />
-                  ))}
-                </div>
-                <div style={{ height: 4, background: "rgba(255,255,255,.1)", borderRadius: 2, marginTop: 6, overflow: "hidden" }}>
-                  <div style={{ width: `${progress}%`, height: "100%", background: `linear-gradient(90deg, ${T.gold}, ${T.goldSoft})`, borderRadius: 2, transition: "width .2s" }} />
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,.5)", marginTop: 2 }}>{AZAN_VOICES[selectedVoice].name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, fontSize: 11, color: "rgba(255,255,255,.4)" }}>
+                  <span>{formatTime(audioRef.current ? audioRef.current.currentTime : 0)}</span>
+                  <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,.1)", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ width: `${progress}%`, height: "100%", background: `linear-gradient(90deg, ${T.gold}, ${T.goldSoft})`, borderRadius: 2, transition: "width .3s" }} />
+                  </div>
+                  <span>{formatTime(duration)}</span>
                 </div>
               </div>
               <button onClick={stopAdhan} style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,.15)", border: "none", color: T.white, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>⏹</button>
@@ -524,7 +509,7 @@ function AdhanPlayerSection() {
             </h3>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,.45)", margin: 0 }}>
               {isPlaying
-                ? `${assignedVoice.name} — ${assignedVoice.muezzin}`
+                ? AZAN_VOICES[selectedVoice].name
                 : `بعد ${minUntilNext >= 60 ? Math.floor(minUntilNext / 60) + " ساعة و " : ""}${minUntilNext % 60} دقيقة`
               }
             </p>
@@ -550,7 +535,6 @@ function AdhanPlayerSection() {
                 }}>
                   {muted ? "🔇 صامت" : "🔊 مفعّل"}
                 </button>
-                {/* Demo button - triggers adhan for testing */}
                 {!isPlaying && (
                   <button onClick={() => { setCurrentPrayer(nextPrayer); startAdhan(); }} style={{
                     padding: "10px 20px", borderRadius: 10, border: "1.5px solid rgba(255,255,255,.15)",
@@ -569,14 +553,41 @@ function AdhanPlayerSection() {
           </div>
         </div>
 
-        {/* Assigned voice info - set by admin */}
-        <div style={{ marginTop: 20, padding: "14px 20px", borderRadius: 14, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.06)", display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🎵</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{assignedVoice.name}</div>
-            <div style={{ fontSize: 11.5, color: "rgba(255,255,255,.4)" }}>{assignedVoice.muezzin} · {assignedVoice.style} · معتمد من الإدارة</div>
+        {/* Voice selector */}
+        <div style={{ marginTop: 20, position: "relative" }}>
+          <div
+            onClick={() => setShowVoiceSelector(!showVoiceSelector)}
+            style={{ padding: "14px 20px", borderRadius: 14, background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.06)", display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}
+          >
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🎵</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{AZAN_VOICES[selectedVoice].name}</div>
+              <div style={{ fontSize: 11.5, color: "rgba(255,255,255,.4)" }}>المؤذن المختار · اضغط لتغيير الصوت</div>
+            </div>
+            <div style={{ fontSize: 11, color: T.goldSoft, fontWeight: 600, padding: "4px 12px", borderRadius: 8, background: "rgba(184,148,42,.12)" }}>
+              {showVoiceSelector ? "▲" : "▼"} اختيار
+            </div>
           </div>
-          <div style={{ fontSize: 11, color: T.goldSoft, fontWeight: 600, padding: "4px 12px", borderRadius: 8, background: "rgba(184,148,42,.12)" }}>✓ معتمد</div>
+
+          {showVoiceSelector && (
+            <div style={{ position: "absolute", top: "100%", right: 0, left: 0, marginTop: 6, background: "#0a3d2e", borderRadius: 14, border: "1px solid rgba(255,255,255,.1)", overflow: "hidden", zIndex: 10 }}>
+              {AZAN_VOICES.map((voice, idx) => (
+                <div
+                  key={voice.id}
+                  onClick={() => { setSelectedVoice(idx); setShowVoiceSelector(false); }}
+                  style={{
+                    padding: "12px 20px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
+                    background: idx === selectedVoice ? "rgba(184,148,42,.15)" : "transparent",
+                    borderBottom: idx < AZAN_VOICES.length - 1 ? "1px solid rgba(255,255,255,.06)" : "none",
+                  }}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: idx === selectedVoice ? `linear-gradient(135deg, ${T.gold}, #d4a730)` : "rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: T.white, fontWeight: 700 }}>{voice.id}</div>
+                  <div style={{ flex: 1, fontSize: 13, fontWeight: idx === selectedVoice ? 700 : 500, color: idx === selectedVoice ? T.goldSoft : "rgba(255,255,255,.7)" }}>{voice.name}</div>
+                  {idx === selectedVoice && <div style={{ fontSize: 11, color: T.goldSoft }}>✓ محدد</div>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <style>{`

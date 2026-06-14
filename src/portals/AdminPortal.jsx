@@ -290,54 +290,29 @@ function AdhanPage({toast}){
   const[playing,setPlaying]=useState(null);
   const[progress,setProgress]=useState(0);
   const[voices,setVoices]=useState([
-    {id:1,name:"أذان الحرم المكي ١",muezzin:"الشيخ السديس",type:"أذان عام",duration:"٤:١٢",status:"معتمد",baseFreq:220,scale:[0,1,4,5,7,8,11,12]},
-    {id:2,name:"أذان الحرم المكي ٢",muezzin:"الشيخ علي الملا",type:"أذان عام",duration:"٤:٣٥",status:"معتمد",baseFreq:196,scale:[0,2,3,5,7,9,10,12]},
-    {id:3,name:"أذان الفجر",muezzin:"الشيخ المعيقلي",type:"أذان فجر",duration:"٤:٤٨",status:"معتمد",baseFreq:185,scale:[0,1,3,5,7,8,10,12]},
-    {id:4,name:"إقامة ١",muezzin:"الشيخ السديس",type:"إقامة",duration:"٠:٤٥",status:"معتمد",baseFreq:262,scale:[0,2,4,5,7,9,11,12]},
-    {id:5,name:"أذان تجريبي",muezzin:"تجريبي",type:"تجريبي",duration:"٤:٠٠",status:"قيد المراجعة",baseFreq:240,scale:[0,2,3,5,7,9,10,12]},
+    {id:1,name:"مشاري العفاسي",muezzin:"مشاري راشد العفاسي",type:"أذان عام",duration:"٤:١٢",status:"معتمد",src:"https://cdn.aladhan.com/audio/adhans/a9.mp3"},
+    {id:2,name:"أحمد النفيس",muezzin:"أحمد النفيس",type:"أذان عام",duration:"٤:٣٥",status:"معتمد",src:"https://cdn.aladhan.com/audio/adhans/a1.mp3"},
+    {id:3,name:"حافظ مصطفى أوزجان",muezzin:"حافظ مصطفى أوزجان",type:"أذان فجر",duration:"٤:٤٨",status:"معتمد",src:"https://cdn.aladhan.com/audio/adhans/a2.mp3"},
+    {id:4,name:"العفاسي — دبي ون",muezzin:"مشاري العفاسي",type:"أذان عام",duration:"٤:٠٠",status:"معتمد",src:"https://cdn.aladhan.com/audio/adhans/a4.mp3"},
+    {id:5,name:"منصور الزهراني",muezzin:"منصور الزهراني",type:"أذان عام",duration:"٤:٢٥",status:"معتمد",src:"https://cdn.aladhan.com/audio/adhans/a11-mansour-al-zahrani.mp3"},
   ]);
   const fileRef=useRef(null);
   const audioRef=useRef(null);
-  const oscRef=useRef(null);
-  const noteTimerRef=useRef(null);
-  const progressTimerRef=useRef(null);
-  const noteIdxRef=useRef(0);
 
   const playVoice=(v)=>{
     if(playing===v.id){stopVoice();return;}
     stopVoice();
-    const ctx=new(window.AudioContext||window.webkitAudioContext)();
-    const gain=ctx.createGain();gain.gain.value=0.25;gain.connect(ctx.destination);
-    audioRef.current={ctx,gain};
-    setPlaying(v.id);setProgress(0);noteIdxRef.current=0;
-    const playNote=()=>{
-      if(oscRef.current)try{oscRef.current.stop();}catch(e){}
-      const idx=noteIdxRef.current;
-      const s=v.scale||[0,2,4,5,7,9,11,12];
-      const semi=s[idx%s.length];
-      const freq=(v.baseFreq||220)*Math.pow(2,semi/12);
-      const osc=ctx.createOscillator();osc.type="sine";
-      osc.frequency.setValueAtTime(freq,ctx.currentTime);
-      const env=ctx.createGain();
-      env.gain.setValueAtTime(0,ctx.currentTime);
-      env.gain.linearRampToValueAtTime(0.22,ctx.currentTime+0.12);
-      env.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+1.1);
-      osc.connect(env);env.connect(gain);
-      osc.start(ctx.currentTime);osc.stop(ctx.currentTime+1.2);
-      oscRef.current=osc;noteIdxRef.current++;
-    };
-    playNote();
-    noteTimerRef.current=setInterval(playNote,1300);
-    progressTimerRef.current=setInterval(()=>{
-      setProgress(p=>{if(p>=100){stopVoice();return 0;}return p+0.5;});
-    },200);
+    if(!v.src)return;
+    const audio=new Audio(v.src);
+    audioRef.current=audio;
+    setPlaying(v.id);setProgress(0);
+    audio.addEventListener("timeupdate",()=>{if(audio.duration){setProgress((audio.currentTime/audio.duration)*100);}});
+    audio.addEventListener("ended",()=>{setPlaying(null);setProgress(0);audioRef.current=null;});
+    audio.play().catch(()=>{});
   };
   const stopVoice=()=>{
     setPlaying(null);setProgress(0);
-    if(noteTimerRef.current)clearInterval(noteTimerRef.current);
-    if(progressTimerRef.current)clearInterval(progressTimerRef.current);
-    if(oscRef.current)try{oscRef.current.stop();}catch(e){}
-    if(audioRef.current?.ctx)try{audioRef.current.ctx.close();}catch(e){}
+    if(audioRef.current){try{audioRef.current.pause();audioRef.current.currentTime=0;}catch(e){}audioRef.current=null;}
   };
   useEffect(()=>()=>stopVoice(),[]);
 
@@ -347,7 +322,7 @@ function AdhanPage({toast}){
   };
   const submitUpload=()=>{
     if(!uploadForm.name||!uploadForm.muezzin||!uploadedFile)return;
-    setVoices(p=>[...p,{id:Date.now(),name:uploadForm.name,muezzin:uploadForm.muezzin,type:uploadForm.type,duration:uploadedFile.duration,status:"قيد المراجعة",baseFreq:220,scale:[0,1,4,5,7,8,11,12]}]);
+    setVoices(p=>[...p,{id:Date.now(),name:uploadForm.name,muezzin:uploadForm.muezzin,type:uploadForm.type,duration:uploadedFile.duration,status:"قيد المراجعة",src:null}]);
     setUploadModal(false);setUploadForm({name:"",muezzin:"",type:"أذان عام"});setUploadedFile(null);
     toast("تم رفع الصوت — بانتظار الاعتماد ✓","success");
   };
@@ -365,17 +340,17 @@ function AdhanPage({toast}){
         <span>الأذان: {p.adhan}</span>
         <span>الإقامة: {p.iqama}</span>
         <span>🔊 {p.vol}%</span>
-        <select defaultValue="أذان الحرم المكي ١" style={{padding:"5px 8px",borderRadius:7,border:`1px solid ${C.border}`,fontSize:12,fontFamily:"inherit",background:C.white,cursor:"pointer"}} onChange={()=>toast("تم تغيير صوت "+p.name+" ✓","success")}>
+        <select defaultValue="مشاري العفاسي" style={{padding:"5px 8px",borderRadius:7,border:`1px solid ${C.border}`,fontSize:12,fontFamily:"inherit",background:C.white,cursor:"pointer"}} onChange={()=>toast("تم تغيير صوت "+p.name+" ✓","success")}>
           {voices.map(v=><option key={v.id} value={v.name}>{v.name} — {v.muezzin}</option>)}
         </select>
         <Badge text={p.done?"تم التشغيل":"مجدول"} color={p.done?"green":"blue"}/>
-        <button onClick={()=>{playVoice({id:`prayer-${i}`,baseFreq:220,scale:[0,1,4,5,7,8,11,12]});toast(`تم تشغيل الأذان — ${p.name} ✓`,"success");}} style={{padding:"4px 10px",borderRadius:6,border:`1px solid ${C.primary}`,background:"transparent",color:C.primary,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{playing===`prayer-${i}`?"⏹ إيقاف":"▶ تشغيل"}</button>
+        <button onClick={()=>{const sv=voices[0];if(sv)playVoice({id:`prayer-${i}`,src:sv.src});toast(`تم تشغيل الأذان — ${p.name} ✓`,"success");}} style={{padding:"4px 10px",borderRadius:6,border:`1px solid ${C.primary}`,background:"transparent",color:C.primary,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{playing===`prayer-${i}`?"⏹ إيقاف":"▶ تشغيل"}</button>
       </div>)}
     </Card>}
     {tab==="library"&&<Card title={`مكتبة الأصوات (${voices.length})`} noPad>
       <Table cols={[
         {label:"",render:r=><button onClick={e=>{e.stopPropagation();playVoice(r);}} style={{width:32,height:32,borderRadius:"50%",background:playing===r.id?C.danger:C.primary,color:C.white,border:"none",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{playing===r.id?"⏹":"▶"}</button>},
-        {label:"الاسم",render:r=><div><span style={{fontWeight:600,display:"block"}}>{r.name}</span>{playing===r.id&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:6}}><div style={{width:100,height:4,background:C.borderL,borderRadius:2,overflow:"hidden"}}><div style={{width:`${progress}%`,height:"100%",background:C.primary,borderRadius:2,transition:"width .2s linear"}}/></div><span style={{fontSize:10,color:C.text3}}>{Math.floor(progress*2.5/60)}:{String(Math.floor(progress*2.5)%60).padStart(2,"0")} / {r.duration}</span></div>}</div>},
+        {label:"الاسم",render:r=><div><span style={{fontWeight:600,display:"block"}}>{r.name}</span>{playing===r.id&&<div style={{marginTop:4,display:"flex",alignItems:"center",gap:6}}><div style={{width:100,height:4,background:C.borderL,borderRadius:2,overflow:"hidden"}}><div style={{width:`${progress}%`,height:"100%",background:C.primary,borderRadius:2,transition:"width .2s linear"}}/></div><span style={{fontSize:10,color:C.text3}}>{audioRef.current?`${Math.floor(audioRef.current.currentTime/60)}:${String(Math.floor(audioRef.current.currentTime)%60).padStart(2,"0")}`:"-:--"} / {r.duration}</span></div>}</div>},
         {label:"المؤذن",render:r=>r.muezzin},
         {label:"النوع",render:r=><Badge text={r.type} color="blue"/>},
         {label:"المدة",render:r=>r.duration},
@@ -399,7 +374,7 @@ function AdhanPage({toast}){
             <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontSize:14}}>{uploadedFile.name}</div><div style={{fontSize:12,color:C.text2}}>{uploadedFile.size} · {uploadedFile.duration}</div></div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}>
-            <button onClick={e=>{e.stopPropagation();playVoice({id:"preview",baseFreq:220,scale:[0,1,4,5,7,8,11,12]});}} style={{width:32,height:32,borderRadius:"50%",background:playing==="preview"?C.danger:C.primary,color:C.white,border:"none",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{playing==="preview"?"⏹":"▶"}</button>
+            <button onClick={e=>{e.stopPropagation();playVoice({id:"preview",src:voices[0]?.src});}} style={{width:32,height:32,borderRadius:"50%",background:playing==="preview"?C.danger:C.primary,color:C.white,border:"none",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>{playing==="preview"?"⏹":"▶"}</button>
             <div style={{flex:1,height:4,background:C.borderL,borderRadius:2,overflow:"hidden"}}><div style={{width:playing==="preview"?`${progress}%`:"0%",height:"100%",background:C.primary,borderRadius:2,transition:"width .2s linear"}}/></div>
             <span style={{fontSize:11,color:C.text3}}>{uploadedFile.duration}</span>
           </div></div>

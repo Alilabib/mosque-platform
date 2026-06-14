@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 /* ══════════════════════════════════
    DESIGN TOKENS — WARM, MOBILE-FIRST
@@ -23,6 +23,14 @@ const PRAYERS = [
   { name: "العصر", time: "٣:١٣", iqama: "٣:٢٨", icon: "🌤️", done: false },
   { name: "المغرب", time: "٦:٤١", iqama: "٦:٥١", icon: "🌇", done: false },
   { name: "العشاء", time: "٨:١١", iqama: "٨:٢٦", icon: "🌃", done: false },
+];
+
+const AZAN_VOICES = [
+  { id: 1, name: "مشاري العفاسي", src: "https://cdn.aladhan.com/audio/adhans/a9.mp3" },
+  { id: 2, name: "أحمد النفيس", src: "https://cdn.aladhan.com/audio/adhans/a1.mp3" },
+  { id: 3, name: "حافظ مصطفى أوزجان", src: "https://cdn.aladhan.com/audio/adhans/a2.mp3" },
+  { id: 4, name: "العفاسي — دبي ون", src: "https://cdn.aladhan.com/audio/adhans/a4.mp3" },
+  { id: 5, name: "منصور الزهراني", src: "https://cdn.aladhan.com/audio/adhans/a11-mansour-al-zahrani.mp3" },
 ];
 
 /* ══════════════════════════════════
@@ -136,6 +144,47 @@ function HomeTab({ khutbahs, setKhutbahs, notifications, setNotifications, toast
   const unreadKhutbah = khutbahs.find(k => k.status === "new");
   const pendingTasks = TASKS.filter(t => t.urgent).length;
 
+  const audioRef = useRef(null);
+  const [playingPrayer, setPlayingPrayer] = useState(null);
+  const [azanVoiceIdx, setAzanVoiceIdx] = useState(0);
+  const [autoAzan, setAutoAzan] = useState(false);
+  const [azanBanner, setAzanBanner] = useState(null);
+
+  const playAzan = useCallback((prayerName) => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    if (playingPrayer === prayerName) { setPlayingPrayer(null); return; }
+    const a = new Audio(AZAN_VOICES[azanVoiceIdx].src);
+    audioRef.current = a;
+    setPlayingPrayer(prayerName);
+    a.play().catch(() => {});
+    a.onended = () => { setPlayingPrayer(null); audioRef.current = null; setAzanBanner(null); };
+  }, [playingPrayer, azanVoiceIdx]);
+
+  const stopAzan = useCallback(() => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    setPlayingPrayer(null);
+    setAzanBanner(null);
+  }, []);
+
+  useEffect(() => {
+    if (!autoAzan) return;
+    const toWestern = (ar) => { const m = { "٠":"0","١":"1","٢":"2","٣":"3","٤":"4","٥":"5","٦":"6","٧":"7","٨":"8","٩":"9" }; return ar.replace(/[٠-٩]/g, c => m[c]); };
+    const iv = setInterval(() => {
+      const now = new Date();
+      const hh = now.getHours();
+      const mm = now.getMinutes();
+      const nowStr = `${hh}:${mm < 10 ? "0" + mm : mm}`;
+      PRAYERS.filter(p => p.iqama !== "—").forEach(p => {
+        const western = toWestern(p.time);
+        if (western === nowStr && !playingPrayer) {
+          setAzanBanner(p.name);
+          playAzan(p.name);
+        }
+      });
+    }, 15000);
+    return () => clearInterval(iv);
+  }, [autoAzan, playAzan, playingPrayer]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* Greeting */}
@@ -191,12 +240,21 @@ function HomeTab({ khutbahs, setKhutbahs, notifications, setNotifications, toast
         </PageCard>
       )}
 
+      {/* Azan banner */}
+      {azanBanner && (
+        <div style={{ background: C.primary, color: C.white, borderRadius: 14, padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, boxShadow: "0 4px 20px rgba(11,110,82,.25)" }}>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>🔊 الأذان يُرفع الآن — {azanBanner}</div>
+          <button onClick={stopAzan} style={{ background: C.danger, color: C.white, border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>إيقاف</button>
+        </div>
+      )}
+
       {/* Today's prayer times */}
       <PageCard>
         <SectionTitle title="مواقيت اليوم — الرياض" badge={<span style={{ fontSize: 11, color: C.text3 }}>أم القرى</span>} />
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {PRAYERS.filter(p => p.iqama !== "—").map((p, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12, background: !p.done ? C.primaryLight : "#fafaf7", border: !p.done ? `1px solid ${C.primary}22` : `1px solid transparent` }}>
+              <button onClick={() => playAzan(p.name)} style={{ width: 28, height: 28, borderRadius: "50%", border: "none", background: playingPrayer === p.name ? C.danger : C.primary, color: C.white, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: "inherit", lineHeight: 1, padding: 0 }}>{playingPrayer === p.name ? "⏹" : "▶"}</button>
               <span style={{ fontSize: 20 }}>{p.icon}</span>
               <span style={{ fontSize: 14, fontWeight: 700, width: 55, color: !p.done ? C.primary : C.text }}>{p.name}</span>
               <span style={{ fontSize: 13, color: C.text2, width: 42 }}>{p.time}</span>
@@ -205,7 +263,31 @@ function HomeTab({ khutbahs, setKhutbahs, notifications, setNotifications, toast
             </div>
           ))}
         </div>
+
+        {/* Voice selector */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, padding: "10px 12px", background: C.borderL, borderRadius: 10 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: C.text2, flexShrink: 0 }}>🎙️ المؤذن:</span>
+          <select value={azanVoiceIdx} onChange={e => { setAzanVoiceIdx(Number(e.target.value)); if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setPlayingPrayer(null); } }} style={{ flex: 1, background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 10px", fontSize: 13, fontFamily: "inherit", color: C.text, direction: "rtl", cursor: "pointer", appearance: "auto" }}>
+            {AZAN_VOICES.map((v, idx) => (
+              <option key={v.id} value={idx}>{v.name}</option>
+            ))}
+          </select>
+        </div>
       </PageCard>
+
+      {/* Auto-azan toggle */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", background: autoAzan ? C.primaryLight : C.card, borderRadius: 14, border: `1px solid ${autoAzan ? C.primary + "33" : C.border}`, cursor: "pointer" }} onClick={() => setAutoAzan(a => !a)}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 20 }}>{autoAzan ? "🔔" : "🔕"}</span>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>تفعيل الأذان التلقائي</div>
+            <div style={{ fontSize: 11.5, color: C.text3, marginTop: 2 }}>تشغيل الأذان عند دخول وقت الصلاة</div>
+          </div>
+        </div>
+        <div style={{ width: 44, height: 24, borderRadius: 12, background: autoAzan ? C.primary : C.text3, position: "relative", transition: "background .2s" }}>
+          <div style={{ width: 20, height: 20, borderRadius: "50%", background: C.white, position: "absolute", top: 2, transition: "right .2s, left .2s", ...(autoAzan ? { left: 22, right: "auto" } : { left: 2, right: "auto" }) }} />
+        </div>
+      </div>
 
       {/* Notifications */}
       <PageCard>
