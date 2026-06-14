@@ -33,6 +33,9 @@ const AZAN_VOICES = [
   { id: 5, name: "منصور الزهراني", src: "https://cdn.aladhan.com/audio/adhans/a11-mansour-al-zahrani.mp3" },
 ];
 
+const KAABA = { lat: 21.4225, lng: 39.8262 };
+const RIYADH = { lat: 24.7136, lng: 46.6753 };
+
 /* ══════════════════════════════════
    MOCK DATA
    ══════════════════════════════════ */
@@ -134,6 +137,140 @@ function Toast({ msg, onClose }) {
 
 function EmptyState({ icon, msg }) {
   return <div style={{ textAlign: "center", padding: 40, color: C.text3 }}><div style={{ fontSize: 36, marginBottom: 10 }}>{icon}</div><div style={{ fontSize: 14 }}>{msg}</div></div>;
+}
+
+/* ══════════════════════════════════
+   QIBLA COMPASS CARD
+   ══════════════════════════════════ */
+function calcQibla(lat, lng) {
+  const p1 = lat * Math.PI / 180;
+  const p2 = KAABA.lat * Math.PI / 180;
+  const dl = (KAABA.lng - lng) * Math.PI / 180;
+  const x = Math.sin(dl) * Math.cos(p2);
+  const y = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  let b = Math.atan2(x, y) * 180 / Math.PI;
+  return (b + 360) % 360;
+}
+
+function QiblaCard() {
+  const [deviceHeading, setDeviceHeading] = useState(null);
+  const [permNeeded, setPermNeeded] = useState(false);
+
+  const qiblaAngle = calcQibla(RIYADH.lat, RIYADH.lng);
+  const qiblaRounded = Math.round(qiblaAngle * 10) / 10;
+
+  useEffect(() => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS && typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+      setPermNeeded(true);
+      return;
+    }
+    function handler(e) {
+      if (e.webkitCompassHeading !== undefined) {
+        setDeviceHeading(e.webkitCompassHeading);
+      } else if (e.alpha !== null) {
+        setDeviceHeading((360 - e.alpha) % 360);
+      }
+    }
+    window.addEventListener("deviceorientation", handler, true);
+    return () => window.removeEventListener("deviceorientation", handler, true);
+  }, []);
+
+  const requestCompass = useCallback(() => {
+    if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+      DeviceOrientationEvent.requestPermission().then(r => {
+        if (r === "granted") {
+          setPermNeeded(false);
+          function handler(e) {
+            if (e.webkitCompassHeading !== undefined) setDeviceHeading(e.webkitCompassHeading);
+            else if (e.alpha !== null) setDeviceHeading((360 - e.alpha) % 360);
+          }
+          window.addEventListener("deviceorientation", handler, true);
+        }
+      }).catch(() => {});
+    }
+  }, []);
+
+  const compassRotation = deviceHeading !== null ? -deviceHeading : 0;
+  const arrowAngle = qiblaAngle;
+  const sz = 200;
+  const cx = sz / 2;
+  const cy = sz / 2;
+  const r = 82;
+
+  const arrowRad = (arrowAngle - 90) * Math.PI / 180;
+  const tipX = cx + Math.cos(arrowRad) * (r - 8);
+  const tipY = cy + Math.sin(arrowRad) * (r - 8);
+  const baseL = 12;
+  const perpRad = arrowRad + Math.PI / 2;
+  const bx1 = cx + Math.cos(perpRad) * baseL / 2;
+  const by1 = cy + Math.sin(perpRad) * baseL / 2;
+  const bx2 = cx - Math.cos(perpRad) * baseL / 2;
+  const by2 = cy - Math.sin(perpRad) * baseL / 2;
+
+  const cardinals = [
+    { label: "ش", angle: 0 }, { label: "شر", angle: 90 },
+    { label: "ج", angle: 180 }, { label: "غ", angle: 270 },
+  ];
+
+  const ticks = [];
+  for (let d = 0; d < 360; d += 10) {
+    const rad = (d - 90) * Math.PI / 180;
+    const isMajor = d % 30 === 0;
+    const outerR = r + 6;
+    const innerR = isMajor ? r - 4 : r;
+    ticks.push({ x1: cx + Math.cos(rad) * innerR, y1: cy + Math.sin(rad) * innerR, x2: cx + Math.cos(rad) * outerR, y2: cy + Math.sin(rad) * outerR, major: isMajor });
+  }
+
+  return (
+    <PageCard>
+      <SectionTitle title="اتجاه القبلة" badge={<Badge text={`${qiblaRounded}°`} color="green" />} />
+      <style>{`@keyframes qiblaPulse{0%,100%{filter:drop-shadow(0 0 3px ${C.primary}44)}50%{filter:drop-shadow(0 0 8px ${C.primary}99)}}`}</style>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+        <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} style={{ transform: `rotate(${compassRotation}deg)`, transition: deviceHeading !== null ? "transform 0.3s ease-out" : "none" }}>
+          <circle cx={cx} cy={cy} r={r + 10} fill={C.bg} stroke={C.border} strokeWidth="1" />
+          <circle cx={cx} cy={cy} r={r + 6} fill="none" stroke={C.border} strokeWidth="0.5" />
+          {ticks.map((t, i) => (
+            <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={t.major ? C.text2 : C.text3} strokeWidth={t.major ? 1.5 : 0.7} />
+          ))}
+          {cardinals.map((c, i) => {
+            const rad = (c.angle - 90) * Math.PI / 180;
+            const lx = cx + Math.cos(rad) * (r - 18);
+            const ly = cy + Math.sin(rad) * (r - 18);
+            return (
+              <text key={i} x={lx} y={ly} textAnchor="middle" dominantBaseline="central"
+                style={{ fontSize: c.angle === 0 ? 14 : 11, fontWeight: c.angle === 0 ? 800 : 600, fill: c.angle === 0 ? C.danger : C.text2, fontFamily: "inherit" }}>
+                {c.label}
+              </text>
+            );
+          })}
+          <circle cx={cx} cy={cy} r={5} fill={C.primary} />
+          <g style={{ animation: "qiblaPulse 2s ease-in-out infinite" }}>
+            <polygon points={`${tipX},${tipY} ${bx1},${by1} ${bx2},${by2}`} fill={C.primary} />
+            <line x1={cx} y1={cy} x2={tipX} y2={tipY} stroke={C.primary} strokeWidth="2.5" strokeLinecap="round" />
+          </g>
+          <text x={tipX + Math.cos(arrowRad) * 14} y={tipY + Math.sin(arrowRad) * 14}
+            textAnchor="middle" dominantBaseline="central" style={{ fontSize: 18 }}>
+            🕋
+          </text>
+        </svg>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 16, fontSize: 13, color: C.text2 }}>
+          <span style={{ fontWeight: 600 }}>📐 الزاوية: {qiblaRounded}°</span>
+          <span style={{ fontWeight: 600 }}>📏 المسافة: ~٨٥٠ كم</span>
+        </div>
+        <div style={{ fontSize: 12, color: deviceHeading !== null ? C.primary : C.text3, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+          {deviceHeading !== null ? "📡 بوصلة الجهاز" : "📍 اتجاه ثابت — الرياض"}
+        </div>
+        {permNeeded && (
+          <div style={{ marginTop: 6 }}>
+            <Btn small variant="secondary" onClick={requestCompass} icon="🧭">تفعيل البوصلة</Btn>
+          </div>
+        )}
+      </div>
+    </PageCard>
+  );
 }
 
 /* ══════════════════════════════════
@@ -288,6 +425,9 @@ function HomeTab({ khutbahs, setKhutbahs, notifications, setNotifications, toast
           <div style={{ width: 20, height: 20, borderRadius: "50%", background: C.white, position: "absolute", top: 2, transition: "right .2s, left .2s", ...(autoAzan ? { left: 22, right: "auto" } : { left: 2, right: "auto" }) }} />
         </div>
       </div>
+
+      {/* Qibla Compass */}
+      <QiblaCard />
 
       {/* Notifications */}
       <PageCard>
@@ -524,14 +664,39 @@ function MosqueTab({ toast }) {
           <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 800 }}>{IMAM.mosque}</h2>
           <div style={{ fontSize: 13.5, color: C.text2 }}>{IMAM.district} — {IMAM.city}</div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          {[{ n: "٣,٥٠٠", l: "السعة", ic: "👥" }, { n: "٤", l: "خدمات", ic: "⚙️" }, { n: "متصل", l: "الجهاز", ic: "📡" }].map((s, i) => (
-            <div key={i} style={{ textAlign: "center", padding: 14, background: C.primaryLight, borderRadius: 12 }}>
-              <div style={{ fontSize: 20, marginBottom: 4 }}>{s.ic}</div>
-              <div style={{ fontSize: 16, fontWeight: 700 }}>{s.n}</div>
-              <div style={{ fontSize: 11, color: C.text2 }}>{s.l}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Live occupancy */}
+          <div style={{ padding: "14px 16px", background: "#f0fdf4", borderRadius: 14, border: "1px solid #bbf7d0" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e", animation: "occPulse 2s infinite" }} />
+                <div>
+                  <div style={{ fontSize: 11, color: "#4ade80", fontWeight: 600, marginBottom: 2 }}>المتواجدون الآن</div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                    <span style={{ fontSize: 28, fontWeight: 800, color: "#15803d" }}>١,٢٤٧</span>
+                    <span style={{ fontSize: 13, color: "#86efac" }}>/ ٣,٥٠٠</span>
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: C.text3 }}>📷 كاميرا ذكية</div>
+                <div style={{ fontSize: 10, color: C.text3, marginTop: 2 }}>تحديث مباشر</div>
+              </div>
             </div>
-          ))}
+            <div style={{ height: 6, background: "#dcfce7", borderRadius: 3, marginTop: 10, overflow: "hidden" }}>
+              <div style={{ width: "36%", height: "100%", background: "#22c55e", borderRadius: 3, transition: "width .3s" }} />
+            </div>
+          </div>
+          {/* Stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            {[{ n: "٣,٥٠٠", l: "السعة", ic: "👥" }, { n: "٤", l: "خدمات", ic: "⚙️" }, { n: "متصل", l: "الجهاز", ic: "📡" }].map((s, i) => (
+              <div key={i} style={{ textAlign: "center", padding: 14, background: C.primaryLight, borderRadius: 12 }}>
+                <div style={{ fontSize: 20, marginBottom: 4 }}>{s.ic}</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{s.n}</div>
+                <div style={{ fontSize: 11, color: C.text2 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </PageCard>
 
@@ -666,6 +831,7 @@ function MosqueTab({ toast }) {
           </div>
         </div>
       )}
+      <style>{`@keyframes occPulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
     </div>
   );
 }

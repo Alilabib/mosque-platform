@@ -28,14 +28,14 @@ const T = {
    MOCK DATA
    ══════════════════════════════════ */
 const MOSQUES = [
-  { id: 1, name: "جامع الراجحي", city: "الرياض", district: "حي النسيم", type: "جامع", capacity: 3500, services: ["الجمعة","الجنائز","العيد","التحفيظ","مصلى نساء","دروس نساء","حلقات تحفيظ نساء"], rating: 4.8, reviews: 234, imam: "الشيخ عبدالله المحمد" },
-  { id: 2, name: "مسجد الفرقان", city: "الرياض", district: "حي الملز", type: "مسجد", capacity: 800, services: ["الجمعة","التحفيظ"], rating: 4.5, reviews: 89, imam: "الشيخ خالد العتيبي" },
-  { id: 3, name: "جامع الملك فهد", city: "جدة", district: "حي الحمراء", type: "جامع", capacity: 5000, services: ["الجمعة","الجنائز","العيد","التحفيظ","المحاضرات","مصلى نساء","حلقات تحفيظ نساء"], rating: 4.9, reviews: 512, imam: "الشيخ سعد الغامدي" },
-  { id: 4, name: "مسجد الإيمان", city: "مكة المكرمة", district: "حي العزيزية", type: "مسجد", capacity: 1200, services: ["الجمعة","التحفيظ","المحاضرات","مصلى نساء","دروس نساء"], rating: 4.6, reviews: 178, imam: "الشيخ أحمد الشهري" },
-  { id: 5, name: "جامع البواردي", city: "الرياض", district: "حي العليا", type: "جامع", capacity: 2800, services: ["الجمعة","الجنائز","العيد","مصلى نساء"], rating: 4.7, reviews: 301, imam: "الشيخ فهد القحطاني" },
-  { id: 6, name: "مسجد النور", city: "المدينة المنورة", district: "حي قباء", type: "مسجد", capacity: 950, services: ["الجمعة","التحفيظ","مصلى نساء","دروس نساء","حلقات تحفيظ نساء"], rating: 4.8, reviews: 145, imam: "الشيخ ياسر الحربي" },
-  { id: 7, name: "مسجد التقوى", city: "الدمام", district: "حي الفيصلية", type: "مسجد", capacity: 700, services: ["الجمعة","الدروس"], rating: 4.4, reviews: 67, imam: "الشيخ محمد الدوسري" },
-  { id: 8, name: "جامع الأمير سلطان", city: "جدة", district: "حي الروضة", type: "جامع", capacity: 4200, services: ["الجمعة","الجنائز","العيد","التحفيظ","المحاضرات","مصلى نساء","دروس نساء","حلقات تحفيظ نساء"], rating: 4.9, reviews: 478, imam: "الشيخ ماجد الزهراني" },
+  { id: 1, name: "جامع الراجحي", city: "الرياض", district: "حي النسيم", type: "جامع", capacity: 3500, currentOccupancy: 1247, services: ["الجمعة","الجنائز","العيد","التحفيظ","مصلى نساء","دروس نساء","حلقات تحفيظ نساء"], rating: 4.8, reviews: 234, imam: "الشيخ عبدالله المحمد" },
+  { id: 2, name: "مسجد الفرقان", city: "الرياض", district: "حي الملز", type: "مسجد", capacity: 800, currentOccupancy: 312, services: ["الجمعة","التحفيظ"], rating: 4.5, reviews: 89, imam: "الشيخ خالد العتيبي" },
+  { id: 3, name: "جامع الملك فهد", city: "جدة", district: "حي الحمراء", type: "جامع", capacity: 5000, currentOccupancy: 2834, services: ["الجمعة","الجنائز","العيد","التحفيظ","المحاضرات","مصلى نساء","حلقات تحفيظ نساء"], rating: 4.9, reviews: 512, imam: "الشيخ سعد الغامدي" },
+  { id: 4, name: "مسجد الإيمان", city: "مكة المكرمة", district: "حي العزيزية", type: "مسجد", capacity: 1200, currentOccupancy: 456, services: ["الجمعة","التحفيظ","المحاضرات","مصلى نساء","دروس نساء"], rating: 4.6, reviews: 178, imam: "الشيخ أحمد الشهري" },
+  { id: 5, name: "جامع البواردي", city: "الرياض", district: "حي العليا", type: "جامع", capacity: 2800, currentOccupancy: 891, services: ["الجمعة","الجنائز","العيد","مصلى نساء"], rating: 4.7, reviews: 301, imam: "الشيخ فهد القحطاني" },
+  { id: 6, name: "مسجد النور", city: "المدينة المنورة", district: "حي قباء", type: "مسجد", capacity: 950, currentOccupancy: 523, services: ["الجمعة","التحفيظ","مصلى نساء","دروس نساء","حلقات تحفيظ نساء"], rating: 4.8, reviews: 145, imam: "الشيخ ياسر الحربي" },
+  { id: 7, name: "مسجد التقوى", city: "الدمام", district: "حي الفيصلية", type: "مسجد", capacity: 700, currentOccupancy: 178, services: ["الجمعة","الدروس"], rating: 4.4, reviews: 67, imam: "الشيخ محمد الدوسري" },
+  { id: 8, name: "جامع الأمير سلطان", city: "جدة", district: "حي الروضة", type: "جامع", capacity: 4200, currentOccupancy: 1965, services: ["الجمعة","الجنائز","العيد","التحفيظ","المحاضرات","مصلى نساء","دروس نساء","حلقات تحفيظ نساء"], rating: 4.9, reviews: 478, imam: "الشيخ ماجد الزهراني" },
 ];
 
 const PRAYER_DATA = {
@@ -598,6 +598,193 @@ function AdhanPlayerSection() {
   );
 }
 
+/* ══════════════════════════════════
+   QIBLA COMPASS SECTION
+   ══════════════════════════════════ */
+function QiblaSection() {
+  const KAABA = { lat: 21.4225, lng: 39.8262 };
+  const CITY_COORDS = {
+    "الرياض": { lat: 24.7136, lng: 46.6753 },
+    "جدة": { lat: 21.5433, lng: 39.1728 },
+    "مكة المكرمة": { lat: 21.4225, lng: 39.8262 },
+    "المدينة المنورة": { lat: 24.4672, lng: 39.6112 },
+    "الدمام": { lat: 26.3927, lng: 49.9777 },
+  };
+
+  const [city, setCity] = useState("الرياض");
+  const [deviceHeading, setDeviceHeading] = useState(null);
+  const [userLat, setUserLat] = useState(null);
+  const [userLng, setUserLng] = useState(null);
+  const [compassSupported, setCompassSupported] = useState(false);
+  const [permissionRequested, setPermissionRequested] = useState(false);
+
+  const toRad = (d) => (d * Math.PI) / 180;
+  const toDeg = (r) => (r * 180) / Math.PI;
+
+  const calcQibla = (lat, lng) => {
+    const φ1 = toRad(lat);
+    const φ2 = toRad(KAABA.lat);
+    const Δλ = toRad(KAABA.lng - lng);
+    const x = Math.sin(Δλ) * Math.cos(φ2);
+    const y = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+    let bearing = toDeg(Math.atan2(x, y));
+    return ((bearing % 360) + 360) % 360;
+  };
+
+  const calcDistance = (lat, lng) => {
+    const R = 6371;
+    const φ1 = toRad(lat);
+    const φ2 = toRad(KAABA.lat);
+    const Δφ = toRad(KAABA.lat - lat);
+    const Δλ = toRad(KAABA.lng - lng);
+    const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const activeLat = userLat !== null ? userLat : CITY_COORDS[city].lat;
+  const activeLng = userLng !== null ? userLng : CITY_COORDS[city].lng;
+  const qiblaAngle = calcQibla(activeLat, activeLng);
+  const distance = calcDistance(activeLat, activeLng);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { setUserLat(pos.coords.latitude); setUserLng(pos.coords.longitude); },
+        () => {}
+      );
+    }
+  }, []);
+
+  const requestCompass = () => {
+    setPermissionRequested(true);
+    if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+      DeviceOrientationEvent.requestPermission().then((perm) => {
+        if (perm === "granted") startCompass();
+      }).catch(() => {});
+    } else {
+      startCompass();
+    }
+  };
+
+  const startCompass = () => {
+    window.addEventListener("deviceorientation", (e) => {
+      const heading = e.webkitCompassHeading !== undefined ? e.webkitCompassHeading : e.alpha !== null ? (360 - e.alpha) : null;
+      if (heading !== null) { setDeviceHeading(heading); setCompassSupported(true); }
+    });
+  };
+
+  useEffect(() => {
+    if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission !== "function") {
+      startCompass();
+    }
+  }, []);
+
+  const compassRotation = deviceHeading !== null ? -deviceHeading : 0;
+  const needleRotation = qiblaAngle;
+
+  const cardinals = [
+    { angle: 0, label: "شمال" },
+    { angle: 90, label: "شرق" },
+    { angle: 180, label: "جنوب" },
+    { angle: 270, label: "غرب" },
+  ];
+
+  return (
+    <section style={{ padding: "70px 48px", background: T.cream, position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0.03, pointerEvents: "none" }}>
+        <IslamicPattern />
+      </div>
+      <style>{`
+        @keyframes qibla-pulse {
+          0%,100%{filter:drop-shadow(0 0 6px rgba(12,107,78,.3))}
+          50%{filter:drop-shadow(0 0 14px rgba(12,107,78,.5))}
+        }
+      `}</style>
+      <div style={{ textAlign: "center", marginBottom: 40, position: "relative" }}>
+        <span style={{ background: T.goldLight, color: T.gold, padding: "6px 20px", borderRadius: 20, fontSize: 13, fontWeight: 600, display: "inline-block", marginBottom: 12 }}>البوصلة الذكية</span>
+        <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: 0 }}>اتجاه القبلة</h2>
+      </div>
+
+      <div style={{ maxWidth: 600, margin: "0 auto", position: "relative" }}>
+        <div style={{ background: T.card, borderRadius: 24, padding: 40, boxShadow: T.shadowLg, textAlign: "center" }}>
+          <svg width="280" height="280" viewBox="0 0 280 280" style={{ display: "block", margin: "0 auto 24px" }}>
+            <defs>
+              <linearGradient id="qibla-arrow-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={T.emerald} />
+                <stop offset="100%" stopColor={T.emeraldDark} />
+              </linearGradient>
+            </defs>
+            <g transform={`rotate(${compassRotation} 140 140)`}>
+              <circle cx="140" cy="140" r="130" fill="none" stroke={T.border} strokeWidth="2" />
+              <circle cx="140" cy="140" r="126" fill="none" stroke={T.gold} strokeWidth="1" strokeDasharray="4 4" />
+              <circle cx="140" cy="140" r="120" fill={T.cream} />
+
+              {Array.from({ length: 12 }).map((_, i) => {
+                const angle = i * 30;
+                const rad = toRad(angle - 90);
+                const x1 = 140 + 118 * Math.cos(rad);
+                const y1 = 140 + 118 * Math.sin(rad);
+                const x2 = 140 + 110 * Math.cos(rad);
+                const y2 = 140 + 110 * Math.sin(rad);
+                return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={T.text3} strokeWidth={i % 3 === 0 ? 2 : 1} />;
+              })}
+
+              {cardinals.map((c) => {
+                const rad = toRad(c.angle - 90);
+                const x = 140 + 100 * Math.cos(rad);
+                const y = 140 + 100 * Math.sin(rad);
+                return <text key={c.label} x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize="12" fontWeight="700" fill={c.angle === 0 ? T.danger : T.text2}>{c.label}</text>;
+              })}
+
+              <g transform={`rotate(${needleRotation} 140 140)`} style={{ animation: "qibla-pulse 2s ease-in-out infinite" }}>
+                <line x1="140" y1="140" x2="140" y2="36" stroke="url(#qibla-arrow-grad)" strokeWidth="3" strokeLinecap="round" />
+                <polygon points="140,28 134,48 146,48" fill={T.emerald} />
+                <text x="140" y="22" textAnchor="middle" fontSize="16">🕋</text>
+              </g>
+
+              <circle cx="140" cy="140" r="6" fill={T.gold} />
+              <circle cx="140" cy="140" r="3" fill={T.white} />
+            </g>
+          </svg>
+
+          <div style={{ fontSize: 22, fontWeight: 700, color: T.emerald, marginBottom: 8 }}>
+            اتجاه القبلة: {qiblaAngle.toFixed(1)}°
+          </div>
+
+          <div style={{ fontSize: 14, color: T.text2, marginBottom: 20 }}>
+            المسافة إلى الكعبة: {distance.toFixed(0)} كم
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
+            {compassSupported ? (
+              <span style={{ background: T.emeraldLight, color: T.emerald, padding: "6px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600 }}>📡 باستخدام بوصلة الجهاز</span>
+            ) : (
+              <span style={{ background: T.goldLight, color: T.gold, padding: "6px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600 }}>📍 حسب المدينة المحددة</span>
+            )}
+          </div>
+
+          {compassSupported && deviceHeading !== null && (
+            <div style={{ fontSize: 13, color: T.text3, marginBottom: 16 }}>تحرك بالجهاز لتحديد الاتجاه</div>
+          )}
+
+          {!compassSupported && !permissionRequested && typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function" && (
+            <button onClick={requestCompass} style={{ background: T.emerald, color: T.white, border: "none", padding: "10px 28px", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", marginBottom: 16 }}>
+              تفعيل البوصلة
+            </button>
+          )}
+
+          <div style={{ marginTop: 8 }}>
+            <label style={{ fontSize: 13, color: T.text2, marginLeft: 8 }}>المدينة:</label>
+            <select value={city} onChange={(e) => setCity(e.target.value)} style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${T.border}`, fontSize: 14, color: T.text, background: T.white, cursor: "pointer", direction: "rtl" }}>
+              {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function MosquesSection({ toast }) {
   const [search, setSearch] = useState("");
   const [filterCity, setFilterCity] = useState("الكل");
@@ -664,9 +851,20 @@ function MosquesSection({ toast }) {
                   return <span key={i} style={{ padding: "3px 10px", borderRadius: 6, background: isWomen ? "#f3e8f9" : T.cream, fontSize: 11.5, color: isWomen ? "#7c3aed" : T.text2, fontWeight: 500 }}>{s}</span>;
                 })}
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: T.text3, marginBottom: 16 }}>
-                <span>👤 {m.imam}</span>
-                <span>السعة: {m.capacity}</span>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "8px 12px", background: "#f0fdf4", borderRadius: 10, border: "1px solid #bbf7d0" }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "occPulse 2s infinite" }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#15803d" }}>{m.currentOccupancy}</span>
+                  <span style={{ fontSize: 11.5, color: "#4ade80" }}>/ {m.capacity}</span>
+                  <span style={{ fontSize: 11, color: "#86efac", marginRight: "auto" }}>مصلي الآن</span>
+                  <div style={{ width: 50, height: 6, background: "#dcfce7", borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{ width: `${Math.round(m.currentOccupancy / m.capacity * 100)}%`, height: "100%", background: m.currentOccupancy / m.capacity > 0.8 ? "#f97316" : "#22c55e", borderRadius: 3, transition: "width .3s" }} />
+                  </div>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: T.text3 }}>
+                  <span>👤 {m.imam}</span>
+                  <span style={{ fontSize: 10, color: T.text3, display: "flex", alignItems: "center", gap: 4 }}>📷 <span style={{ opacity: 0.6 }}>كاميرا ذكية</span></span>
+                </div>
               </div>
               <button onClick={() => setSelectedMosque(m)} style={{
                 marginTop: "auto", width: "100%", padding: "12px 20px", borderRadius: 12, border: "none",
@@ -715,7 +913,7 @@ function MosquesSection({ toast }) {
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>بيانات المسجد</h3>
                   <div style={{ display: "grid", gridTemplateColumns: "100px 1fr", gap: "12px 14px", fontSize: 14 }}>
-                    {[["الإمام", selectedMosque.imam], ["السعة", `${selectedMosque.capacity} مصلي`], ["المدينة", selectedMosque.city], ["الحي", selectedMosque.district], ["النوع", selectedMosque.type]].map(([l, v], i) => (
+                    {[["المتواجدون الآن", `${selectedMosque.currentOccupancy} مصلي`], ["الإمام", selectedMosque.imam], ["السعة", `${selectedMosque.capacity} مصلي`], ["نسبة الإشغال", `${Math.round(selectedMosque.currentOccupancy / selectedMosque.capacity * 100)}%`], ["المدينة", selectedMosque.city], ["الحي", selectedMosque.district], ["النوع", selectedMosque.type]].map(([l, v], i) => (
                       <div key={i} style={{ display: "contents" }}><span style={{ color: T.text2, fontWeight: 600 }}>{l}</span><span style={{ color: T.text }}>{v}</span></div>
                     ))}
                   </div>
@@ -738,7 +936,7 @@ function MosquesSection({ toast }) {
                 </div>
               </div>
             </div>
-            <style>{`@keyframes modalIn { from { opacity:0; transform:translateY(20px) scale(.96) } to { opacity:1; transform:none } }`}</style>
+            <style>{`@keyframes modalIn { from { opacity:0; transform:translateY(20px) scale(.96) } to { opacity:1; transform:none } } @keyframes occPulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
           </div>
         </div>
       )}
@@ -1138,6 +1336,7 @@ export default function PublicWebsite() {
       <div ref={refs.home}><HeroSection onNav={scrollTo} /></div>
       <div ref={refs.prayers}><PrayerTimesSection /></div>
       <AdhanPlayerSection />
+      <QiblaSection />
       <div ref={refs.mosques}>
         <MosquesSection toast={msg => setToastMsg(msg)} />
       </div>
