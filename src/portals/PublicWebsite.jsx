@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { LANGUAGES, RTL_LANGS, translations } from "../i18n";
 
 /* ══════════════════════════════════
    DESIGN TOKENS
@@ -65,6 +66,11 @@ const DONATION_PROJECTS = [
 
 const CITIES = ["الرياض","جدة","مكة المكرمة","المدينة المنورة","الدمام"];
 const COMPLAINT_TYPES = ["صوت مرتفع","صوت منخفض","تداخل أصوات","نظافة","صيانة","تكييف","إضاءة","ازدحام","أخرى"];
+const getComplaintTypes = (t) => [
+  t("complaintType.loudSound"), t("complaintType.lowSound"), t("complaintType.soundInterference"),
+  t("complaintType.cleanliness"), t("complaintType.maintenance"), t("complaintType.airConditioning"),
+  t("complaintType.lighting"), t("complaintType.overcrowding"), t("complaintType.other"),
+];
 
 /* ══════════════════════════════════
    GEOMETRIC PATTERN SVG
@@ -119,14 +125,15 @@ function Toast({ message, onClose }) {
 /* ══════════════════════════════════
    SECTIONS
    ══════════════════════════════════ */
-function Navbar({ active, onNav }) {
+function Navbar({ active, onNav, t, lang, setLang, isRTL }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const links = [
-    { id: "home", label: "الرئيسية" },
-    { id: "mosques", label: "المساجد" },
-    { id: "prayers", label: "مواقيت الصلاة" },
-    { id: "donate", label: "التبرعات" },
-    { id: "complaint", label: "بلاغ / تقييم" },
+    { id: "home", label: t("nav.home") },
+    { id: "mosques", label: t("nav.mosques") },
+    { id: "prayers", label: t("nav.prayers") },
+    { id: "donate", label: t("nav.donate") },
+    { id: "complaint", label: t("nav.complaint") },
   ];
   return (
     <nav style={{
@@ -138,7 +145,42 @@ function Navbar({ active, onNav }) {
     }} className="navbar">
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: `linear-gradient(135deg, ${T.emerald}, ${T.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🕌</div>
-        <span style={{ fontSize: 18, fontWeight: 800, color: T.emeraldDark }}>منصة المساجد</span>
+        <span style={{ fontSize: 18, fontWeight: 800, color: T.emeraldDark }}>{t("nav.platform")}</span>
+      </div>
+      {/* Language switcher */}
+      <div style={{ position: "relative" }}>
+        <button onClick={() => setLangOpen(!langOpen)} style={{
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "6px 14px", borderRadius: 10, border: `1px solid ${T.border}`,
+          background: T.white, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: T.text2,
+        }}>
+          <span>{LANGUAGES.find(l => l.code === lang)?.flag}</span>
+          <span>{LANGUAGES.find(l => l.code === lang)?.name}</span>
+          <span style={{ fontSize: 10 }}>▼</span>
+        </button>
+        {langOpen && (
+          <div style={{
+            position: "absolute", top: "100%", marginTop: 4, [isRTL ? "right" : "left"]: 0,
+            background: T.white, borderRadius: 12, border: `1px solid ${T.border}`,
+            boxShadow: T.shadowLg, overflow: "hidden", zIndex: 200, minWidth: 160,
+          }}>
+            {LANGUAGES.map(l => (
+              <button key={l.code} onClick={() => { setLang(l.code); setLangOpen(false); }}
+                style={{
+                  width: "100%", padding: "10px 16px", border: "none",
+                  background: l.code === lang ? T.emeraldLight : "transparent",
+                  display: "flex", alignItems: "center", gap: 10,
+                  cursor: "pointer", fontFamily: "inherit", fontSize: 13,
+                  color: l.code === lang ? T.emerald : T.text, fontWeight: l.code === lang ? 700 : 500,
+                  textAlign: isRTL ? "right" : "left",
+                }}>
+                <span>{l.flag}</span>
+                <span>{l.name}</span>
+                {l.code === lang && <span style={{ marginInlineStart: "auto", fontSize: 11, color: T.emerald }}>✓</span>}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       {/* Desktop links */}
       <div className="nav-links" style={{ display: "flex", gap: 4 }}>
@@ -172,7 +214,7 @@ function Navbar({ active, onNav }) {
         }}>
           {links.map(l => (
             <button key={l.id} onClick={() => { onNav(l.id); setMobileOpen(false); }} style={{
-              padding: "14px 16px", borderRadius: 10, border: "none", textAlign: "right",
+              padding: "14px 16px", borderRadius: 10, border: "none", textAlign: isRTL ? "right" : "left",
               background: active === l.id ? T.emeraldLight : "transparent",
               color: active === l.id ? T.emerald : T.text2,
               fontWeight: active === l.id ? 700 : 500, fontSize: 15,
@@ -185,7 +227,7 @@ function Navbar({ active, onNav }) {
   );
 }
 
-function HeroSection({ onNav }) {
+function HeroSection({ onNav, t }) {
   const [search, setSearch] = useState("");
   return (
     <section style={{
@@ -203,12 +245,12 @@ function HeroSection({ onNav }) {
       </div>
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 700 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: T.goldSoft, letterSpacing: 2, marginBottom: 16, textTransform: "uppercase" }}>بسم الله الرحمن الرحيم</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: T.goldSoft, letterSpacing: 2, marginBottom: 16, textTransform: "uppercase" }}>{t("hero.bismillah")}</div>
         <h1 style={{ fontSize: 44, fontWeight: 800, lineHeight: 1.3, margin: "0 0 16px", textShadow: "0 2px 20px rgba(0,0,0,.15)" }}>
-          منصة المساجد
+          {t("hero.title")}
         </h1>
         <p style={{ fontSize: 18, lineHeight: 1.8, color: "rgba(255,255,255,.8)", margin: "0 0 36px", maxWidth: 550, marginInline: "auto" }}>
-          ابحث عن المساجد القريبة، تعرف على مواقيت الصلاة، ساهم في دعم بيوت الله
+          {t("hero.subtitle")}
         </p>
 
         <div style={{
@@ -217,7 +259,7 @@ function HeroSection({ onNav }) {
           border: "1px solid rgba(255,255,255,.2)",
         }}>
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="ابحث عن مسجد بالاسم أو المدينة..."
+            placeholder={t("hero.searchPlaceholder")}
             style={{
               flex: 1, padding: "14px 20px", border: "none", background: "transparent",
               color: T.white, fontSize: 15, fontFamily: "inherit", outline: "none",
@@ -230,14 +272,14 @@ function HeroSection({ onNav }) {
           }}
             onMouseEnter={e => e.currentTarget.style.transform = "scale(1.03)"}
             onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-          >بحث</button>
+          >{t("hero.search")}</button>
         </div>
 
         <div style={{ display: "flex", gap: 32, justifyContent: "center", marginTop: 40 }}>
           {[
-            { n: "+١٢,٠٠٠", l: "مسجد مسجل" },
-            { n: "+٣٠٠", l: "مدينة وحي" },
-            { n: "+٢ مليون", l: "ريال تبرعات" },
+            { n: t("hero.stat1"), l: t("hero.stat1Label") },
+            { n: t("hero.stat2"), l: t("hero.stat2Label") },
+            { n: t("hero.stat3"), l: t("hero.stat3Label") },
           ].map((s, i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 26, fontWeight: 800, color: T.goldSoft }}>{s.n}</div>
@@ -250,7 +292,7 @@ function HeroSection({ onNav }) {
   );
 }
 
-function PrayerTimesSection() {
+function PrayerTimesSection({ t }) {
   const [city, setCity] = useState("الرياض");
   const [now, setNow] = useState(new Date());
   const times = PRAYER_DATA[city];
@@ -258,17 +300,17 @@ function PrayerTimesSection() {
 
   // Live clock — updates every second
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
+    const ti = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(ti);
   }, []);
 
   const labels = [
-    { key: "fajr", name: "الفجر", icon: "🌙" },
-    { key: "sunrise", name: "الشروق", icon: "🌅" },
-    { key: "dhuhr", name: "الظهر", icon: "☀️" },
-    { key: "asr", name: "العصر", icon: "🌤️" },
-    { key: "maghrib", name: "المغرب", icon: "🌇" },
-    { key: "isha", name: "العشاء", icon: "🌃" },
+    { key: "fajr", name: t("prayer.fajr"), icon: "🌙" },
+    { key: "sunrise", name: t("prayer.sunrise"), icon: "🌅" },
+    { key: "dhuhr", name: t("prayer.dhuhr"), icon: "☀️" },
+    { key: "asr", name: t("prayer.asr"), icon: "🌤️" },
+    { key: "maghrib", name: t("prayer.maghrib"), icon: "🌇" },
+    { key: "isha", name: t("prayer.isha"), icon: "🌃" },
   ];
 
   // Find next prayer
@@ -298,19 +340,19 @@ function PrayerTimesSection() {
       <IslamicPattern opacity={0.025} />
       <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 2, marginBottom: 8 }}>حسب تقويم أم القرى</div>
-          <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: "0 0 12px" }}>مواقيت الصلاة</h2>
-          <p style={{ color: T.text2, fontSize: 15 }}>التوقيت المحلي — ٢٢ ذو الحجة ١٤٤٧ هـ</p>
+          <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 2, marginBottom: 8 }}>{t("prayer.source")}</div>
+          <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: "0 0 12px" }}>{t("prayer.title")}</h2>
+          <p style={{ color: T.text2, fontSize: 15 }}>{t("prayer.subtitle")}</p>
 
           {/* Live clock */}
           <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 14, background: T.cream, borderRadius: 16, padding: "12px 28px", border: `1px solid ${T.border}` }}>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 11, color: T.text3, marginBottom: 2 }}>الوقت الآن</div>
+              <div style={{ fontSize: 11, color: T.text3, marginBottom: 2 }}>{t("prayer.now")}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: T.text, fontVariantNumeric: "tabular-nums", direction: "ltr" }}>{currentTime}</div>
             </div>
             <div style={{ width: 1, height: 40, background: T.border }} />
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 11, color: T.text3, marginBottom: 2 }}>الصلاة القادمة: {labels[nextIdx].name}</div>
+              <div style={{ fontSize: 11, color: T.text3, marginBottom: 2 }}>{t("prayer.next")}: {labels[nextIdx].name}</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: T.emerald, fontVariantNumeric: "tabular-nums", direction: "ltr" }}>
                 {toArabicNum(pad2(cdH))}:{toArabicNum(pad2(cdM))}:{toArabicNum(pad2(cdS))}
               </div>
@@ -352,8 +394,8 @@ function PrayerTimesSection() {
                 <div style={{ fontSize: 28, marginBottom: 10 }}>{p.icon}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>{p.name}</div>
                 <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: 1 }}>{times[p.key]}</div>
-                {isHighlight && <div style={{ fontSize: 11, marginTop: 8, opacity: .85, fontWeight: 600, background: "rgba(255,255,255,.15)", borderRadius: 10, padding: "3px 10px", display: "inline-block" }}>الصلاة القادمة</div>}
-                {isPast && !isHighlight && <div style={{ fontSize: 11, marginTop: 6, opacity: .6 }}>✓ أُديت</div>}
+                {isHighlight && <div style={{ fontSize: 11, marginTop: 8, opacity: .85, fontWeight: 600, background: "rgba(255,255,255,.15)", borderRadius: 10, padding: "3px 10px", display: "inline-block" }}>{t("prayer.nextLabel")}</div>}
+                {isPast && !isHighlight && <div style={{ fontSize: 11, marginTop: 6, opacity: .6 }}>{t("prayer.done")}</div>}
               </div>
             );
           })}
@@ -371,7 +413,7 @@ const AZAN_VOICES = [
   { id: 5, name: "منصور الزهراني", src: "https://cdn.aladhan.com/audio/adhans/a11-mansour-al-zahrani.mp3" },
 ];
 
-function AdhanPlayerSection() {
+function AdhanPlayerSection({ t }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -384,7 +426,7 @@ function AdhanPlayerSection() {
   const audioRef = useRef(null);
   const triggeredRef = useRef({});
 
-  const prayerNames = { fajr: "الفجر", dhuhr: "الظهر", asr: "العصر", maghrib: "المغرب", isha: "العشاء" };
+  const prayerNames = { fajr: t("prayer.fajr"), dhuhr: t("prayer.dhuhr"), asr: t("prayer.asr"), maghrib: t("prayer.maghrib"), isha: t("prayer.isha") };
 
   // Clock tick
   useEffect(() => {
@@ -485,7 +527,7 @@ function AdhanPlayerSection() {
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ width: 50, height: 50, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #d4a730)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, animation: "spin 3s linear infinite" }}>🔊</div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: T.white }}>الأذان يُرفع الآن — {currentPrayer ? prayerNames[currentPrayer] : ""}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: T.white }}>{t("adhan.playingNow")} {currentPrayer ? prayerNames[currentPrayer] : ""}</div>
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,.5)", marginTop: 2 }}>{AZAN_VOICES[selectedVoice].name}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, fontSize: 11, color: "rgba(255,255,255,.4)" }}>
                   <span>{formatTime(audioRef.current ? audioRef.current.currentTime : 0)}</span>
@@ -503,14 +545,14 @@ function AdhanPlayerSection() {
         {/* Main controls */}
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: T.goldSoft, letterSpacing: 2, marginBottom: 6 }}>نظام الأذان الآلي</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: T.goldSoft, letterSpacing: 2, marginBottom: 6 }}>{t("adhan.system")}</div>
             <h3 style={{ fontSize: 22, fontWeight: 800, color: T.white, margin: "0 0 6px" }}>
-              {isPlaying ? "الأذان يُرفع الآن ..." : `الأذان القادم: ${prayerNames[nextPrayer]}`}
+              {isPlaying ? t("adhan.playing") : `${t("adhan.nextAdhan")} ${prayerNames[nextPrayer]}`}
             </h3>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,.45)", margin: 0 }}>
               {isPlaying
                 ? AZAN_VOICES[selectedVoice].name
-                : `بعد ${minUntilNext >= 60 ? Math.floor(minUntilNext / 60) + " ساعة و " : ""}${minUntilNext % 60} دقيقة`
+                : `${minUntilNext >= 60 ? Math.floor(minUntilNext / 60) + " " + t("adhan.hoursAnd") + " " : ""}${minUntilNext % 60} ${t("adhan.minutes")}`
               }
             </p>
           </div>
@@ -523,7 +565,7 @@ function AdhanPlayerSection() {
                 fontSize: 15, fontWeight: 700, fontFamily: "inherit",
                 boxShadow: "0 4px 20px rgba(184,148,42,.4)",
               }}>
-                🔔 تفعيل الأذان المباشر
+                {t("adhan.enable")}
               </button>
             ) : (
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -533,7 +575,7 @@ function AdhanPlayerSection() {
                   color: T.white, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
                   display: "flex", alignItems: "center", gap: 6,
                 }}>
-                  {muted ? "🔇 صامت" : "🔊 مفعّل"}
+                  {muted ? t("adhan.muted") : t("adhan.active")}
                 </button>
                 {!isPlaying && (
                   <button onClick={() => { setCurrentPrayer(nextPrayer); startAdhan(); }} style={{
@@ -541,14 +583,14 @@ function AdhanPlayerSection() {
                     background: "rgba(255,255,255,.05)", color: "rgba(255,255,255,.6)",
                     fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
                   }}>
-                    ▶ تجربة
+                    {t("adhan.test")}
                   </button>
                 )}
               </div>
             )}
             <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: enabled && !muted ? "#4ade80" : "rgba(255,255,255,.2)", display: "inline-block" }} />
-              {!enabled ? "اضغط للتفعيل" : muted ? "الأذان مكتوم" : "سيعمل تلقائياً عند وقت الصلاة"}
+              {!enabled ? t("adhan.pressToEnable") : muted ? t("adhan.isMuted") : t("adhan.autoPlay")}
             </div>
           </div>
         </div>
@@ -562,10 +604,10 @@ function AdhanPlayerSection() {
             <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🎵</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: T.white }}>{AZAN_VOICES[selectedVoice].name}</div>
-              <div style={{ fontSize: 11.5, color: "rgba(255,255,255,.4)" }}>المؤذن المختار · اضغط لتغيير الصوت</div>
+              <div style={{ fontSize: 11.5, color: "rgba(255,255,255,.4)" }}>{t("adhan.selectedMuezzin")}</div>
             </div>
             <div style={{ fontSize: 11, color: T.goldSoft, fontWeight: 600, padding: "4px 12px", borderRadius: 8, background: "rgba(184,148,42,.12)" }}>
-              {showVoiceSelector ? "▲" : "▼"} اختيار
+              {showVoiceSelector ? "▲" : "▼"} {t("adhan.choose")}
             </div>
           </div>
 
@@ -583,7 +625,7 @@ function AdhanPlayerSection() {
                 >
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: idx === selectedVoice ? `linear-gradient(135deg, ${T.gold}, #d4a730)` : "rgba(255,255,255,.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: T.white, fontWeight: 700 }}>{voice.id}</div>
                   <div style={{ flex: 1, fontSize: 13, fontWeight: idx === selectedVoice ? 700 : 500, color: idx === selectedVoice ? T.goldSoft : "rgba(255,255,255,.7)" }}>{voice.name}</div>
-                  {idx === selectedVoice && <div style={{ fontSize: 11, color: T.goldSoft }}>✓ محدد</div>}
+                  {idx === selectedVoice && <div style={{ fontSize: 11, color: T.goldSoft }}>{t("adhan.selected")}</div>}
                 </div>
               ))}
             </div>
@@ -601,7 +643,7 @@ function AdhanPlayerSection() {
 /* ══════════════════════════════════
    QIBLA COMPASS SECTION
    ══════════════════════════════════ */
-function QiblaSection() {
+function QiblaSection({ t }) {
   const KAABA = { lat: 21.4225, lng: 39.8262 };
   const CITY_COORDS = {
     "الرياض": { lat: 24.7136, lng: 46.6753 },
@@ -683,10 +725,10 @@ function QiblaSection() {
   const needleRotation = qiblaAngle;
 
   const cardinals = [
-    { angle: 0, label: "شمال" },
-    { angle: 90, label: "شرق" },
-    { angle: 180, label: "جنوب" },
-    { angle: 270, label: "غرب" },
+    { angle: 0, label: t("qibla.north") },
+    { angle: 90, label: t("qibla.east") },
+    { angle: 180, label: t("qibla.south") },
+    { angle: 270, label: t("qibla.west") },
   ];
 
   return (
@@ -701,8 +743,8 @@ function QiblaSection() {
         }
       `}</style>
       <div style={{ textAlign: "center", marginBottom: 40, position: "relative" }}>
-        <span style={{ background: T.goldLight, color: T.gold, padding: "6px 20px", borderRadius: 20, fontSize: 13, fontWeight: 600, display: "inline-block", marginBottom: 12 }}>البوصلة الذكية</span>
-        <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: 0 }}>اتجاه القبلة</h2>
+        <span style={{ background: T.goldLight, color: T.gold, padding: "6px 20px", borderRadius: 20, fontSize: 13, fontWeight: 600, display: "inline-block", marginBottom: 12 }}>{t("qibla.badge")}</span>
+        <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: 0 }}>{t("qibla.title")}</h2>
       </div>
 
       <div style={{ maxWidth: 600, margin: "0 auto", position: "relative" }}>
@@ -748,33 +790,33 @@ function QiblaSection() {
           </svg>
 
           <div style={{ fontSize: 22, fontWeight: 700, color: T.emerald, marginBottom: 8 }}>
-            اتجاه القبلة: {qiblaAngle.toFixed(1)}°
+            {t("qibla.direction")} {qiblaAngle.toFixed(1)}°
           </div>
 
           <div style={{ fontSize: 14, color: T.text2, marginBottom: 20 }}>
-            المسافة إلى الكعبة: {distance.toFixed(0)} كم
+            {t("qibla.distance")} {distance.toFixed(0)} {t("qibla.km")}
           </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16 }}>
             {compassSupported ? (
-              <span style={{ background: T.emeraldLight, color: T.emerald, padding: "6px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600 }}>📡 باستخدام بوصلة الجهاز</span>
+              <span style={{ background: T.emeraldLight, color: T.emerald, padding: "6px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600 }}>{t("qibla.deviceCompass")}</span>
             ) : (
-              <span style={{ background: T.goldLight, color: T.gold, padding: "6px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600 }}>📍 حسب المدينة المحددة</span>
+              <span style={{ background: T.goldLight, color: T.gold, padding: "6px 16px", borderRadius: 20, fontSize: 13, fontWeight: 600 }}>{t("qibla.cityBased")}</span>
             )}
           </div>
 
           {compassSupported && deviceHeading !== null && (
-            <div style={{ fontSize: 13, color: T.text3, marginBottom: 16 }}>تحرك بالجهاز لتحديد الاتجاه</div>
+            <div style={{ fontSize: 13, color: T.text3, marginBottom: 16 }}>{t("qibla.moveDevice")}</div>
           )}
 
           {!compassSupported && !permissionRequested && typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function" && (
             <button onClick={requestCompass} style={{ background: T.emerald, color: T.white, border: "none", padding: "10px 28px", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", marginBottom: 16 }}>
-              تفعيل البوصلة
+              {t("qibla.enableCompass")}
             </button>
           )}
 
           <div style={{ marginTop: 8 }}>
-            <label style={{ fontSize: 13, color: T.text2, marginLeft: 8 }}>المدينة:</label>
+            <label style={{ fontSize: 13, color: T.text2, marginLeft: 8 }}>{t("qibla.city")}</label>
             <select value={city} onChange={(e) => setCity(e.target.value)} style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${T.border}`, fontSize: 14, color: T.text, background: T.white, cursor: "pointer", direction: "rtl" }}>
               {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -785,7 +827,7 @@ function QiblaSection() {
   );
 }
 
-function MosquesSection({ toast }) {
+function MosquesSection({ toast, t }) {
   const [search, setSearch] = useState("");
   const [filterCity, setFilterCity] = useState("الكل");
   const [selectedMosque, setSelectedMosque] = useState(null);
@@ -799,14 +841,14 @@ function MosquesSection({ toast }) {
     <section style={{ padding: "70px 48px", background: T.bg }} className="section-mosques">
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: "0 0 10px" }}>ابحث عن مسجد</h2>
-          <p style={{ color: T.text2, fontSize: 15 }}>اعثر على المسجد الأقرب إليك واطلع على خدماته ومواقيته</p>
+          <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: "0 0 10px" }}>{t("mosques.title")}</h2>
+          <p style={{ color: T.text2, fontSize: 15 }}>{t("mosques.subtitle")}</p>
         </div>
 
         <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 20, flexWrap: "wrap" }}>
           <div style={{ position: "relative", width: 340, maxWidth: "100%" }}>
             <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", fontSize: 17, color: T.text3 }}>🔍</span>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="اسم المسجد أو الحي..."
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("mosques.searchPlaceholder")}
               style={{ width: "100%", padding: "12px 44px 12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", background: T.white, boxSizing: "border-box" }}
               onFocus={e => e.target.style.borderColor = T.emerald} onBlur={e => e.target.style.borderColor = T.border}
             />
@@ -818,7 +860,7 @@ function MosquesSection({ toast }) {
                 background: filterCity === c ? T.emerald : T.white, color: filterCity === c ? T.white : T.text2,
                 fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all .15s",
                 boxShadow: filterCity !== c ? T.shadow : "none",
-              }}>{c}</button>
+              }}>{c === "الكل" ? t("mosques.all") : c}</button>
             ))}
           </div>
         </div>
@@ -843,7 +885,7 @@ function MosquesSection({ toast }) {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                 <Stars rating={m.rating} />
                 <span style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{m.rating}</span>
-                <span style={{ fontSize: 12, color: T.text3 }}>({m.reviews} تقييم)</span>
+                <span style={{ fontSize: 12, color: T.text3 }}>({m.reviews} {t("mosques.review")})</span>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
                 {m.services.slice(0, 5).map((s, i) => {
@@ -856,14 +898,14 @@ function MosquesSection({ toast }) {
                   <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "occPulse 2s infinite" }} />
                   <span style={{ fontSize: 14, fontWeight: 700, color: "#15803d" }}>{m.currentOccupancy}</span>
                   <span style={{ fontSize: 11.5, color: "#4ade80" }}>/ {m.capacity}</span>
-                  <span style={{ fontSize: 11, color: "#86efac", marginRight: "auto" }}>مصلي الآن</span>
+                  <span style={{ fontSize: 11, color: "#86efac", marginRight: "auto" }}>{t("mosques.prayersNow")}</span>
                   <div style={{ width: 50, height: 6, background: "#dcfce7", borderRadius: 3, overflow: "hidden" }}>
                     <div style={{ width: `${Math.round(m.currentOccupancy / m.capacity * 100)}%`, height: "100%", background: m.currentOccupancy / m.capacity > 0.8 ? "#f97316" : "#22c55e", borderRadius: 3, transition: "width .3s" }} />
                   </div>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: T.text3 }}>
                   <span>👤 {m.imam}</span>
-                  <span style={{ fontSize: 10, color: T.text3, display: "flex", alignItems: "center", gap: 4 }}>📷 <span style={{ opacity: 0.6 }}>كاميرا ذكية</span></span>
+                  <span style={{ fontSize: 10, color: T.text3, display: "flex", alignItems: "center", gap: 4 }}>📷 <span style={{ opacity: 0.6 }}>{t("mosques.smartCamera")}</span></span>
                 </div>
               </div>
               <button onClick={() => setSelectedMosque(m)} style={{
@@ -873,11 +915,11 @@ function MosquesSection({ toast }) {
               }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.emeraldDark; }}
                 onMouseLeave={e => { e.currentTarget.style.background = T.emerald; }}
-              >عرض التفاصيل</button>
+              >{t("mosques.viewDetails")}</button>
             </div>
           ))}
         </div>
-        {filtered.length === 0 && <div style={{ textAlign: "center", padding: 60, color: T.text3 }}><div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div><div style={{ fontSize: 15 }}>لا توجد نتائج مطابقة</div></div>}
+        {filtered.length === 0 && <div style={{ textAlign: "center", padding: 60, color: T.text3 }}><div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div><div style={{ fontSize: 15 }}>{t("mosques.noResults")}</div></div>}
       </div>
 
       {/* Mosque Detail Modal */}
@@ -903,7 +945,7 @@ function MosquesSection({ toast }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
                   <Stars rating={selectedMosque.rating} />
                   <span style={{ fontSize: 16, fontWeight: 700 }}>{selectedMosque.rating}</span>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,.6)" }}>({selectedMosque.reviews} تقييم)</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,.6)" }}>({selectedMosque.reviews} {t("mosques.review")})</span>
                 </div>
               </div>
             </div>
@@ -911,26 +953,26 @@ function MosquesSection({ toast }) {
             <div style={{ padding: 28 }}>
               <div className="mosque-modal-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
                 <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>بيانات المسجد</h3>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>{t("mosques.data")}</h3>
                   <div style={{ display: "grid", gridTemplateColumns: "100px 1fr", gap: "12px 14px", fontSize: 14 }}>
-                    {[["المتواجدون الآن", `${selectedMosque.currentOccupancy} مصلي`], ["الإمام", selectedMosque.imam], ["السعة", `${selectedMosque.capacity} مصلي`], ["نسبة الإشغال", `${Math.round(selectedMosque.currentOccupancy / selectedMosque.capacity * 100)}%`], ["المدينة", selectedMosque.city], ["الحي", selectedMosque.district], ["النوع", selectedMosque.type]].map(([l, v], i) => (
+                    {[[t("mosques.currentlyPresent"), `${selectedMosque.currentOccupancy} ${t("mosques.worshipper")}`], [t("mosques.imam"), selectedMosque.imam], [t("mosques.capacity"), `${selectedMosque.capacity} ${t("mosques.worshipper")}`], [t("mosques.occupancy"), `${Math.round(selectedMosque.currentOccupancy / selectedMosque.capacity * 100)}%`], [t("mosques.cityLabel"), selectedMosque.city], [t("mosques.district"), selectedMosque.district], [t("mosques.type"), selectedMosque.type]].map(([l, v], i) => (
                       <div key={i} style={{ display: "contents" }}><span style={{ color: T.text2, fontWeight: 600 }}>{l}</span><span style={{ color: T.text }}>{v}</span></div>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>الخدمات المتاحة</h3>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>{t("mosques.services")}</h3>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {selectedMosque.services.map((s, i) => <Badge key={i} text={s} color={s.includes("نساء") ? "purple" : "green"} />)}
                   </div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, margin: "24px 0 16px", color: T.text }}>تقييم المسجد</h3>
-                  <RatingForm mosque={selectedMosque} toast={toast} />
-                  <h3 style={{ fontSize: 16, fontWeight: 700, margin: "24px 0 12px", color: T.text }}>الموقع</h3>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, margin: "24px 0 16px", color: T.text }}>{t("mosques.rating")}</h3>
+                  <RatingForm mosque={selectedMosque} toast={toast} t={t} />
+                  <h3 style={{ fontSize: 16, fontWeight: 700, margin: "24px 0 12px", color: T.text }}>{t("mosques.location")}</h3>
                   <div style={{ height: 140, borderRadius: 14, background: `linear-gradient(135deg, ${T.emeraldLight}, #e7f1f8)`, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${T.border}` }}>
                     <div style={{ textAlign: "center" }}>
                       <div style={{ fontSize: 30 }}>📍</div>
                       <div style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>{selectedMosque.city} — {selectedMosque.district}</div>
-                      <div style={{ fontSize: 11, color: T.emerald, marginTop: 3, fontWeight: 600 }}>خريطة تفاعلية في النسخة الكاملة</div>
+                      <div style={{ fontSize: 11, color: T.emerald, marginTop: 3, fontWeight: 600 }}>{t("mosques.mapFull")}</div>
                     </div>
                   </div>
                 </div>
@@ -944,12 +986,12 @@ function MosquesSection({ toast }) {
   );
 }
 
-function RatingForm({ mosque, toast }) {
+function RatingForm({ mosque, toast, t }) {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  if (submitted) return <div style={{ padding: 16, background: T.emeraldLight, borderRadius: 12, textAlign: "center", fontSize: 14, color: T.emerald, fontWeight: 600 }}>شكراً لتقييمك! ⭐ {rating}/5</div>;
+  if (submitted) return <div style={{ padding: 16, background: T.emeraldLight, borderRadius: 12, textAlign: "center", fontSize: 14, color: T.emerald, fontWeight: 600 }}>{t("rating.thanks")} ⭐ {rating}/5</div>;
   return (
     <div style={{ padding: 16, background: "#fafaf8", borderRadius: 14, border: `1px solid ${T.border}` }}>
       <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 12 }}>
@@ -958,15 +1000,15 @@ function RatingForm({ mosque, toast }) {
             style={{ fontSize: 28, cursor: "pointer", color: s <= (hover || rating) ? T.gold : T.border, transition: "color .15s" }}>★</span>
         ))}
       </div>
-      <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="أضف تعليقاً (اختياري)..." rows={2}
+      <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder={t("rating.placeholder")} rows={2}
         style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, fontFamily: "inherit", outline: "none", resize: "none", boxSizing: "border-box", marginBottom: 10 }} />
-      <button onClick={() => { if (rating) { setSubmitted(true); toast("تم إرسال التقييم — شكراً لك ⭐"); }}}
-        disabled={!rating} style={{ width: "100%", padding: "11px", borderRadius: 10, border: "none", background: rating ? T.emerald : T.border, color: T.white, fontSize: 14, fontWeight: 600, cursor: rating ? "pointer" : "default", fontFamily: "inherit" }}>إرسال التقييم</button>
+      <button onClick={() => { if (rating) { setSubmitted(true); toast(t("rating.toast")); }}}
+        disabled={!rating} style={{ width: "100%", padding: "11px", borderRadius: 10, border: "none", background: rating ? T.emerald : T.border, color: T.white, fontSize: 14, fontWeight: 600, cursor: rating ? "pointer" : "default", fontFamily: "inherit" }}>{t("rating.submit")}</button>
     </div>
   );
 }
 
-function DonationsSection({ toast }) {
+function DonationsSection({ toast, t }) {
   const [projects, setProjects] = useState(DONATION_PROJECTS);
   const [donateModal, setDonateModal] = useState(null);
   const [amount, setAmount] = useState("");
@@ -987,9 +1029,9 @@ function DonationsSection({ toast }) {
       <IslamicPattern opacity={0.02} />
       <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 2, marginBottom: 8 }}>صدقة جارية</div>
-          <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: "0 0 10px" }}>ساهم في دعم بيوت الله</h2>
-          <p style={{ color: T.text2, fontSize: 15, maxWidth: 500, margin: "0 auto" }}>تبرعك يصل مباشرة للمشاريع المعتمدة عبر بوابات دفع مرخصة</p>
+          <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 2, marginBottom: 8 }}>{t("donate.badge")}</div>
+          <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: "0 0 10px" }}>{t("donate.title")}</h2>
+          <p style={{ color: T.text2, fontSize: 15, maxWidth: 500, margin: "0 auto" }}>{t("donate.subtitle")}</p>
         </div>
 
         <div className="donate-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 22 }}>
@@ -1009,9 +1051,9 @@ function DonationsSection({ toast }) {
                 <Progress val={p.collected} max={p.target} />
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: T.text2, margin: "8px 0 4px" }}>
                   <span style={{ fontWeight: 700, color: T.emerald }}>{pct}%</span>
-                  <span>{(p.collected / 1e3).toFixed(0)} ألف من {(p.target / 1e3).toFixed(0)} ألف</span>
+                  <span>{(p.collected / 1e3).toFixed(0)} {t("donate.thousand")} {t("donate.of")} {(p.target / 1e3).toFixed(0)} {t("donate.thousand")}</span>
                 </div>
-                <div style={{ fontSize: 12, color: T.text3, marginBottom: 16 }}>{p.donors} متبرع</div>
+                <div style={{ fontSize: 12, color: T.text3, marginBottom: 16 }}>{p.donors} {t("donate.donors")}</div>
                 <button onClick={() => setDonateModal(p)} style={{
                   width: "100%", padding: "13px 20px", borderRadius: 12, border: "none",
                   background: T.emerald, color: T.white, fontSize: 15, fontWeight: 700,
@@ -1019,7 +1061,7 @@ function DonationsSection({ toast }) {
                 }}
                   onMouseEnter={e => { e.currentTarget.style.background = T.emeraldDark; e.currentTarget.style.transform = "scale(1.02)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = T.emerald; e.currentTarget.style.transform = "scale(1)"; }}
-                >تبرع الآن 💳</button>
+                >{t("donate.donateNow")}</button>
               </div>
             );
           })}
@@ -1039,13 +1081,13 @@ function DonationsSection({ toast }) {
               <div style={{ position: "relative" }}>
                 <div style={{ fontSize: 36, marginBottom: 8 }}>{donateModal.img}</div>
                 <h3 style={{ margin: "0 0 4px", fontSize: 19, fontWeight: 700 }}>{donateModal.title}</h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,.7)", margin: 0 }}>المتبقي: {((donateModal.target - donateModal.collected) / 1e3).toFixed(0)} ألف ريال</p>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,.7)", margin: 0 }}>{t("donate.remaining")} {((donateModal.target - donateModal.collected) / 1e3).toFixed(0)} {t("donate.thousand")} {t("donate.sar")}</p>
               </div>
             </div>
             <div style={{ padding: 28 }}>
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", fontSize: 14, fontWeight: 600, marginBottom: 8 }}>مبلغ التبرع (ريال سعودي)</label>
-                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="أدخل المبلغ"
+                <label style={{ display: "block", fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{t("donate.amount")}</label>
+                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={t("donate.enterAmount")}
                   style={{ width: "100%", padding: "14px 18px", borderRadius: 12, border: `2px solid ${T.border}`, fontSize: 18, fontFamily: "inherit", outline: "none", textAlign: "center", fontWeight: 700, boxSizing: "border-box" }}
                   onFocus={e => e.target.style.borderColor = T.emerald} onBlur={e => e.target.style.borderColor = T.border}
                 />
@@ -1062,7 +1104,7 @@ function DonationsSection({ toast }) {
                 ))}
               </div>
               <div style={{ padding: 14, background: T.goldLight, borderRadius: 12, fontSize: 12.5, color: T.gold, textAlign: "center", marginBottom: 20, lineHeight: 1.7 }}>
-                ⚠️ عرض تجريبي — في النسخة الكاملة يتم الدفع عبر بوابة مرخصة مع إصدار إيصال رسمي
+                {t("donate.demoWarning")}
               </div>
               <button onClick={donate} disabled={!amount}
                 style={{
@@ -1071,9 +1113,9 @@ function DonationsSection({ toast }) {
                   fontSize: 17, fontWeight: 700, cursor: amount ? "pointer" : "default",
                   fontFamily: "inherit", transition: "all .15s",
                 }}>
-                تأكيد التبرع {amount && `— ${Number(amount).toLocaleString()} ريال`}
+                {t("donate.confirm")} {amount && `— ${Number(amount).toLocaleString()} ${t("donate.sar")}`}
               </button>
-              <button onClick={() => setDonateModal(null)} style={{ width: "100%", padding: "12px", border: "none", background: "transparent", color: T.text2, fontSize: 14, cursor: "pointer", fontFamily: "inherit", marginTop: 8 }}>إلغاء</button>
+              <button onClick={() => setDonateModal(null)} style={{ width: "100%", padding: "12px", border: "none", background: "transparent", color: T.text2, fontSize: 14, cursor: "pointer", fontFamily: "inherit", marginTop: 8 }}>{t("donate.cancel")}</button>
             </div>
             <style>{`@keyframes modalIn { from { opacity:0; transform:translateY(20px) scale(.96) } to { opacity:1; transform:none } }`}</style>
           </div>
@@ -1084,18 +1126,18 @@ function DonationsSection({ toast }) {
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.5)" }} />
           <div onClick={e => e.stopPropagation()} style={{ position: "relative", background: T.white, borderRadius: 24, width: 420, maxWidth: "92vw", padding: 32, textAlign: "center", boxShadow: "0 24px 60px rgba(0,0,0,.2)", animation: "modalIn .25s ease" }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-            <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 6px" }}>جزاكم الله خيراً</h3>
-            <p style={{ color: T.text2, fontSize: 14, margin: "0 0 20px" }}>تم التبرع بنجاح</p>
+            <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 6px" }}>{t("donate.jazak")}</h3>
+            <p style={{ color: T.text2, fontSize: 14, margin: "0 0 20px" }}>{t("donate.success")}</p>
             <div style={{ background: "#fafaf8", borderRadius: 14, padding: 20, textAlign: "right", border: `1px solid ${T.border}`, marginBottom: 16 }}>
               <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: "10px 12px", fontSize: 14 }}>
-                <span style={{ color: T.text2, fontWeight: 600 }}>المشروع</span><span style={{ fontWeight: 600 }}>{receipt.project}</span>
-                <span style={{ color: T.text2, fontWeight: 600 }}>المبلغ</span><span style={{ fontWeight: 700, color: T.emerald }}>{receipt.amount.toLocaleString()} ريال</span>
-                <span style={{ color: T.text2, fontWeight: 600 }}>رقم العملية</span><span style={{ fontWeight: 600, color: T.emerald }}>{receipt.ref}</span>
-                <span style={{ color: T.text2, fontWeight: 600 }}>التاريخ</span><span>{receipt.date}</span>
+                <span style={{ color: T.text2, fontWeight: 600 }}>{t("donate.project")}</span><span style={{ fontWeight: 600 }}>{receipt.project}</span>
+                <span style={{ color: T.text2, fontWeight: 600 }}>{t("donate.amountLabel")}</span><span style={{ fontWeight: 700, color: T.emerald }}>{receipt.amount.toLocaleString()} {t("donate.sar")}</span>
+                <span style={{ color: T.text2, fontWeight: 600 }}>{t("donate.refNum")}</span><span style={{ fontWeight: 600, color: T.emerald }}>{receipt.ref}</span>
+                <span style={{ color: T.text2, fontWeight: 600 }}>{t("donate.date")}</span><span>{receipt.date}</span>
               </div>
             </div>
-            <div style={{ padding: 10, background: T.goldLight, borderRadius: 10, fontSize: 12, color: T.gold, marginBottom: 16 }}>⚠️ في النسخة الكاملة سيتم إصدار إيصال PDF قابل للتحميل</div>
-            <button onClick={() => setReceipt(null)} style={{ width: "100%", padding: "14px", borderRadius: 14, border: "none", background: T.emerald, color: T.white, fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>إغلاق</button>
+            <div style={{ padding: 10, background: T.goldLight, borderRadius: 10, fontSize: 12, color: T.gold, marginBottom: 16 }}>{t("donate.pdfNote")}</div>
+            <button onClick={() => setReceipt(null)} style={{ width: "100%", padding: "14px", borderRadius: 14, border: "none", background: T.emerald, color: T.white, fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{t("donate.close")}</button>
             <style>{`@keyframes modalIn { from { opacity:0; transform:translateY(20px) scale(.96) } to { opacity:1; transform:none } }`}</style>
           </div>
         </div>
@@ -1104,7 +1146,7 @@ function DonationsSection({ toast }) {
   );
 }
 
-function ComplaintSection({ toast }) {
+function ComplaintSection({ toast, t }) {
   const [form, setForm] = useState({ mosque: "", type: "", desc: "", name: "", phone: "" });
   const [submitted, setSubmitted] = useState(false);
   const [refNum, setRefNum] = useState("");
@@ -1117,7 +1159,7 @@ function ComplaintSection({ toast }) {
     const ref = `SH-${String(Math.floor(Math.random() * 9000 + 1000))}`;
     setRefNum(ref);
     setSubmitted(true);
-    toast("تم إرسال البلاغ بنجاح ✓");
+    toast(t("complaint.toast"));
   };
 
   const track = () => {
@@ -1131,22 +1173,22 @@ function ComplaintSection({ toast }) {
     <section style={{ padding: "70px 48px", background: T.bg }} className="section-complaint">
       <div style={{ maxWidth: 700, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: "0 0 10px" }}>بلاغ أو تقييم</h2>
-          <p style={{ color: T.text2, fontSize: 15 }}>ساعدنا في تحسين تجربة المساجد</p>
+          <h2 style={{ fontSize: 32, fontWeight: 800, color: T.text, margin: "0 0 10px" }}>{t("complaint.title")}</h2>
+          <p style={{ color: T.text2, fontSize: 15 }}>{t("complaint.subtitle")}</p>
         </div>
         <div style={{ display: "flex", justifyContent: "center", gap: 4, marginBottom: 20 }}>
-          {[{ id: "new", label: "بلاغ جديد" }, { id: "track", label: "متابعة بلاغ" }].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: tab === t.id ? T.emerald : T.white, color: tab === t.id ? T.white : T.text2, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", boxShadow: tab !== t.id ? "0 1px 4px rgba(0,0,0,.05)" : "none" }}>{t.label}</button>
+          {[{ id: "new", label: t("complaint.new") }, { id: "track", label: t("complaint.track") }].map(tb => (
+            <button key={tb.id} onClick={() => setTab(tb.id)} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: tab === tb.id ? T.emerald : T.white, color: tab === tb.id ? T.white : T.text2, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", boxShadow: tab !== tb.id ? "0 1px 4px rgba(0,0,0,.05)" : "none" }}>{tb.label}</button>
           ))}
         </div>
         <div style={{ background: T.white, borderRadius: 22, padding: 36, border: `1px solid ${T.border}`, boxShadow: "0 2px 16px rgba(0,0,0,.06)" }}>
           {tab === "track" ? (
             <div>
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>رقم البلاغ</label>
+                <label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>{t("complaint.refLabel")}</label>
                 <div style={{ display: "flex", gap: 10 }}>
                   <input value={trackId} onChange={e => setTrackId(e.target.value)} placeholder="SH-XXXX" style={{ flex: 1, padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 16, fontFamily: "inherit", outline: "none", textAlign: "center", fontWeight: 600, boxSizing: "border-box" }} />
-                  <button onClick={track} style={{ padding: "12px 24px", borderRadius: 12, border: "none", background: T.emerald, color: T.white, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>بحث</button>
+                  <button onClick={track} style={{ padding: "12px 24px", borderRadius: 12, border: "none", background: T.emerald, color: T.white, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>{t("complaint.searchBtn")}</button>
                 </div>
               </div>
               {trackResult && (
@@ -1156,11 +1198,11 @@ function ComplaintSection({ toast }) {
                     <Badge text={trackResult.status} color="orange" />
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: "8px 12px", fontSize: 13.5, marginBottom: 16 }}>
-                    <span style={{ color: T.text2, fontWeight: 600 }}>المسجد</span><span>{trackResult.mosque}</span>
-                    <span style={{ color: T.text2, fontWeight: 600 }}>النوع</span><span>{trackResult.type}</span>
-                    <span style={{ color: T.text2, fontWeight: 600 }}>التاريخ</span><span>{trackResult.date}</span>
+                    <span style={{ color: T.text2, fontWeight: 600 }}>{t("complaint.mosque")}</span><span>{trackResult.mosque}</span>
+                    <span style={{ color: T.text2, fontWeight: 600 }}>{t("complaint.typeLabel")}</span><span>{trackResult.type}</span>
+                    <span style={{ color: T.text2, fontWeight: 600 }}>{t("complaint.dateLabel")}</span><span>{trackResult.date}</span>
                   </div>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 10 }}>سجل المتابعة</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 10 }}>{t("complaint.history")}</div>
                   {trackResult.history.map((h, i) => (
                     <div key={i} style={{ display: "flex", gap: 10, marginBottom: 10 }}>
                       <div style={{ width: 10, height: 10, borderRadius: "50%", background: i === trackResult.history.length - 1 ? T.emerald : T.border, marginTop: 4, flexShrink: 0 }} />
@@ -1173,24 +1215,24 @@ function ComplaintSection({ toast }) {
           ) : submitted ? (
             <div style={{ textAlign: "center", padding: 40 }}>
               <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
-              <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>تم إرسال البلاغ</h3>
-              <p style={{ color: T.text2, fontSize: 15 }}>شكراً لمساهمتك — سيتم مراجعة بلاغك في أقرب وقت</p>
-              <div style={{ marginTop: 16, padding: 14, background: T.emeraldLight, borderRadius: 12, fontSize: 16, color: T.emerald, fontWeight: 700 }}>رقم البلاغ: {refNum}</div>
-              <p style={{ fontSize: 13, color: T.text3, marginTop: 10 }}>احتفظ بهذا الرقم لمتابعة حالة بلاغك</p>
-              <button onClick={reset} style={{ marginTop: 16, padding: "10px 24px", borderRadius: 10, border: `1.5px solid ${T.emerald}`, background: "transparent", color: T.emerald, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>إرسال بلاغ آخر</button>
+              <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>{t("complaint.submitted")}</h3>
+              <p style={{ color: T.text2, fontSize: 15 }}>{t("complaint.thanks")}</p>
+              <div style={{ marginTop: 16, padding: 14, background: T.emeraldLight, borderRadius: 12, fontSize: 16, color: T.emerald, fontWeight: 700 }}>{t("complaint.refDisplay")} {refNum}</div>
+              <p style={{ fontSize: 13, color: T.text3, marginTop: 10 }}>{t("complaint.keepRef")}</p>
+              <button onClick={reset} style={{ marginTop: 16, padding: "10px 24px", borderRadius: 10, border: `1.5px solid ${T.emerald}`, background: "transparent", color: T.emerald, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>{t("complaint.another")}</button>
             </div>
           ) : (
             <>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
-                <div style={{ marginBottom: 18 }}><label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>المسجد <span style={{ color: T.danger }}>*</span></label><select value={form.mosque} onChange={e => setForm(p => ({ ...p, mosque: e.target.value }))} style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", background: T.white, appearance: "auto", boxSizing: "border-box" }}><option value="">اختر المسجد</option>{MOSQUES.map(m => <option key={m.id} value={m.name}>{m.name} — {m.city}</option>)}</select></div>
-                <div style={{ marginBottom: 18 }}><label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>نوع البلاغ <span style={{ color: T.danger }}>*</span></label><select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", background: T.white, appearance: "auto", boxSizing: "border-box" }}><option value="">اختر النوع</option>{COMPLAINT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+                <div style={{ marginBottom: 18 }}><label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>{t("complaint.mosqueLabel")} <span style={{ color: T.danger }}>*</span></label><select value={form.mosque} onChange={e => setForm(p => ({ ...p, mosque: e.target.value }))} style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", background: T.white, appearance: "auto", boxSizing: "border-box" }}><option value="">{t("complaint.chooseMosque")}</option>{MOSQUES.map(m => <option key={m.id} value={m.name}>{m.name} — {m.city}</option>)}</select></div>
+                <div style={{ marginBottom: 18 }}><label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>{t("complaint.typeSelect")} <span style={{ color: T.danger }}>*</span></label><select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", background: T.white, appearance: "auto", boxSizing: "border-box" }}><option value="">{t("complaint.chooseType")}</option>{getComplaintTypes(t).map(ct => <option key={ct} value={ct}>{ct}</option>)}</select></div>
               </div>
-              <div style={{ marginBottom: 18 }}><label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>وصف البلاغ <span style={{ color: T.danger }}>*</span></label><textarea value={form.desc} onChange={e => setForm(p => ({ ...p, desc: e.target.value }))} rows={4} placeholder="اكتب تفاصيل الملاحظة..." style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", resize: "vertical", boxSizing: "border-box" }} /></div>
+              <div style={{ marginBottom: 18 }}><label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>{t("complaint.descLabel")} <span style={{ color: T.danger }}>*</span></label><textarea value={form.desc} onChange={e => setForm(p => ({ ...p, desc: e.target.value }))} rows={4} placeholder={t("complaint.descPlaceholder")} style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", resize: "vertical", boxSizing: "border-box" }} /></div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
-                <div style={{ marginBottom: 18 }}><label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>الاسم (اختياري)</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="اسمك" style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} /></div>
-                <div style={{ marginBottom: 18 }}><label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>الجوال (اختياري)</label><input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="05XXXXXXXX" style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} /></div>
+                <div style={{ marginBottom: 18 }}><label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>{t("complaint.nameLabel")}</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder={t("complaint.namePlaceholder")} style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} /></div>
+                <div style={{ marginBottom: 18 }}><label style={{ display: "block", fontSize: 13.5, fontWeight: 600, marginBottom: 7 }}>{t("complaint.phoneLabel")}</label><input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="05XXXXXXXX" style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} /></div>
               </div>
-              <button onClick={submit} disabled={!form.mosque || !form.type || !form.desc} style={{ width: "100%", padding: "15px", borderRadius: 14, border: "none", background: (form.mosque && form.type && form.desc) ? T.emerald : T.border, color: T.white, fontSize: 16, fontWeight: 700, cursor: (form.mosque && form.type && form.desc) ? "pointer" : "default", fontFamily: "inherit", marginTop: 4 }}>إرسال البلاغ</button>
+              <button onClick={submit} disabled={!form.mosque || !form.type || !form.desc} style={{ width: "100%", padding: "15px", borderRadius: 14, border: "none", background: (form.mosque && form.type && form.desc) ? T.emerald : T.border, color: T.white, fontSize: 16, fontWeight: 700, cursor: (form.mosque && form.type && form.desc) ? "pointer" : "default", fontFamily: "inherit", marginTop: 4 }}>{t("complaint.submitBtn")}</button>
             </>
           )}
         </div>
@@ -1199,14 +1241,14 @@ function ComplaintSection({ toast }) {
   );
 }
 
-function AboutSection() {
+function AboutSection({ t }) {
   const [openFaq, setOpenFaq] = useState(null);
   const faqs = [
-    { q: "كيف أبحث عن أقرب مسجد؟", a: "استخدم خاصية البحث في قسم المساجد، يمكنك التصفية حسب المدينة والحي. في النسخة الكاملة سيتم إضافة البحث بالموقع الجغرافي." },
-    { q: "هل التبرعات تصل مباشرة للمشاريع؟", a: "نعم، يتم تحويل التبرعات عبر بوابات دفع مرخصة مباشرة لحساب المشروع المعتمد، مع إصدار إيصال رسمي." },
-    { q: "كيف أتابع حالة بلاغي؟", a: "بعد إرسال البلاغ ستحصل على رقم مرجعي. استخدمه في خاصية 'متابعة بلاغ' لمعرفة آخر المستجدات." },
-    { q: "هل بيانات المستخدمين محمية؟", a: "نعم، المنصة تلتزم بنظام حماية البيانات الشخصية (PDPL) في المملكة العربية السعودية وتستخدم تشفيراً متقدماً." },
-    { q: "كيف يتم تحديد مواقيت الصلاة؟", a: "يتم حساب المواقيت وفق تقويم أم القرى المعتمد من المملكة العربية السعودية." },
+    { q: t("about.faq1q"), a: t("about.faq1a") },
+    { q: t("about.faq2q"), a: t("about.faq2a") },
+    { q: t("about.faq3q"), a: t("about.faq3a") },
+    { q: t("about.faq4q"), a: t("about.faq4a") },
+    { q: t("about.faq5q"), a: t("about.faq5a") },
   ];
   return (
     <section style={{ padding: "70px 48px", background: T.white, position: "relative" }} className="section-about">
@@ -1214,13 +1256,13 @@ function AboutSection() {
       <div style={{ maxWidth: 900, margin: "0 auto", position: "relative" }}>
         <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 2, marginBottom: 8 }}>عن المنصة</div>
-            <h2 style={{ fontSize: 28, fontWeight: 800, color: T.text, margin: "0 0 16px" }}>منصة المساجد</h2>
+            <div style={{ fontSize: 12, fontWeight: 700, color: T.gold, letterSpacing: 2, marginBottom: 8 }}>{t("about.badge")}</div>
+            <h2 style={{ fontSize: 28, fontWeight: 800, color: T.text, margin: "0 0 16px" }}>{t("about.title")}</h2>
             <p style={{ fontSize: 15, lineHeight: 2, color: T.text2 }}>
-              منصة وطنية شاملة لإدارة المساجد وخدمة المصلين في المملكة العربية السعودية. تهدف المنصة إلى تحسين تجربة المصلين من خلال توفير معلومات دقيقة عن المساجد ومواقيت الصلاة، وتسهيل التبرعات لمشاريع بيوت الله، وتمكين المواطنين من المشاركة في تحسين خدمات المساجد عبر نظام البلاغات والتقييم.
+              {t("about.desc")}
             </p>
             <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-              {[{ n: "+١٢,٠٠٠", l: "مسجد" }, { n: "+٣٠٠", l: "مدينة" }, { n: "٢٤/٧", l: "خدمة" }].map((s, i) => (
+              {[{ n: "+١٢,٠٠٠", l: t("about.statMosque") }, { n: "+٣٠٠", l: t("about.statCity") }, { n: "٢٤/٧", l: t("about.statService") }].map((s, i) => (
                 <div key={i} style={{ padding: "14px 20px", background: T.emeraldLight, borderRadius: 12, textAlign: "center", flex: 1 }}>
                   <div style={{ fontSize: 20, fontWeight: 800, color: T.emerald }}>{s.n}</div>
                   <div style={{ fontSize: 12, color: T.text2, marginTop: 2 }}>{s.l}</div>
@@ -1229,7 +1271,7 @@ function AboutSection() {
             </div>
           </div>
           <div>
-            <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>الأسئلة الشائعة</h3>
+            <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>{t("about.faqTitle")}</h3>
             {faqs.map((f, i) => (
               <div key={i} style={{ marginBottom: 8, borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: "100%", padding: "14px 16px", border: "none", background: openFaq === i ? T.emeraldLight : "#fafaf8", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: 600, color: T.text, textAlign: "right" }}>
@@ -1245,7 +1287,7 @@ function AboutSection() {
   );
 }
 
-function Footer() {
+function Footer({ t }) {
   return (
     <footer style={{ background: T.emeraldDark, color: "rgba(255,255,255,.7)", padding: "50px 48px 30px", position: "relative" }}>
       <IslamicPattern opacity={0.04} color="#fff" />
@@ -1254,15 +1296,15 @@ function Footer() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
               <div style={{ width: 36, height: 36, borderRadius: 9, background: `linear-gradient(135deg, ${T.emerald}, ${T.gold})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🕌</div>
-              <span style={{ color: T.white, fontSize: 17, fontWeight: 800 }}>منصة المساجد</span>
+              <span style={{ color: T.white, fontSize: 17, fontWeight: 800 }}>{t("footer.platform")}</span>
             </div>
             <p style={{ fontSize: 13.5, lineHeight: 1.9, maxWidth: 340 }}>
-              منصة وطنية لإدارة المساجد وخدمة المصلين في المملكة العربية السعودية
+              {t("footer.desc")}
             </p>
           </div>
           <div>
-            <h4 style={{ color: T.white, fontSize: 14, fontWeight: 700, marginBottom: 14 }}>روابط سريعة</h4>
-            {["الرئيسية","المساجد","مواقيت الصلاة","التبرعات","بلاغ / تقييم"].map(l => (
+            <h4 style={{ color: T.white, fontSize: 14, fontWeight: 700, marginBottom: 14 }}>{t("footer.quickLinks")}</h4>
+            {[t("nav.home"), t("nav.mosques"), t("nav.prayers"), t("nav.donate"), t("nav.complaint")].map(l => (
               <div key={l} style={{ fontSize: 13, marginBottom: 10, cursor: "pointer", transition: "color .15s" }}
                 onMouseEnter={e => e.currentTarget.style.color = T.goldSoft}
                 onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,.7)"}
@@ -1270,20 +1312,20 @@ function Footer() {
             ))}
           </div>
           <div>
-            <h4 style={{ color: T.white, fontSize: 14, fontWeight: 700, marginBottom: 14 }}>المراجع</h4>
-            {["وزارة الشؤون الإسلامية","تقويم أم القرى","الهيئة العامة للأوقاف","منصة إحسان"].map(l => (
+            <h4 style={{ color: T.white, fontSize: 14, fontWeight: 700, marginBottom: 14 }}>{t("footer.references")}</h4>
+            {[t("footer.ref1"), t("footer.ref2"), t("footer.ref3"), t("footer.ref4")].map(l => (
               <div key={l} style={{ fontSize: 13, marginBottom: 10 }}>{l}</div>
             ))}
           </div>
           <div>
-            <h4 style={{ color: T.white, fontSize: 14, fontWeight: 700, marginBottom: 14 }}>تواصل معنا</h4>
+            <h4 style={{ color: T.white, fontSize: 14, fontWeight: 700, marginBottom: 14 }}>{t("footer.contact")}</h4>
             <div style={{ fontSize: 13, marginBottom: 10 }}>📧 info@masajid.sa</div>
             <div style={{ fontSize: 13, marginBottom: 10 }}>📞 920-XXXX-XX</div>
             <div style={{ fontSize: 13 }}>📍 الرياض، المملكة العربية السعودية</div>
           </div>
         </div>
         <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, textAlign: "center", fontSize: 12.5, color: "rgba(255,255,255,.4)" }}>
-          © ٢٠٢٦ منصة المساجد — جميع الحقوق محفوظة · MVP Demo
+          {t("footer.copyright")}
         </div>
       </div>
     </footer>
@@ -1296,6 +1338,11 @@ function Footer() {
 export default function PublicWebsite() {
   const [page, setPage] = useState("home");
   const [toastMsg, setToastMsg] = useState(null);
+  const [lang, setLang] = useState("ar");
+  const t = (key) => translations[lang]?.[key] || translations.ar[key] || key;
+  const isRTL = RTL_LANGS.includes(lang);
+  const currentLang = LANGUAGES.find(l => l.code === lang);
+  const dir = isRTL ? "rtl" : "ltr";
 
   const refs = { home: useRef(), prayers: useRef(), mosques: useRef(), donate: useRef(), complaint: useRef() };
 
@@ -1305,8 +1352,8 @@ export default function PublicWebsite() {
   };
 
   return (
-    <div dir="rtl" style={{ fontFamily: "'Tajawal', 'Noto Sans Arabic', sans-serif", background: T.bg, color: T.text, minHeight: "100vh" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+    <div dir={dir} style={{ fontFamily: `'${currentLang.font}', 'Noto Sans Arabic', sans-serif`, background: T.bg, color: T.text, minHeight: "100vh" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Inter:wght@400;500;700;800;900&family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
         * { box-sizing: border-box; margin: 0 } html { scroll-behavior: smooth }
         ::selection { background: ${T.emeraldLight}; color: ${T.emeraldDark} }
         ::-webkit-scrollbar { width:7px } ::-webkit-scrollbar-track { background:${T.bg} } ::-webkit-scrollbar-thumb { background:${T.border}; border-radius:4px }
@@ -1331,19 +1378,19 @@ export default function PublicWebsite() {
         }
       `}</style>
 
-      <Navbar active={page} onNav={scrollTo} />
+      <Navbar active={page} onNav={scrollTo} t={t} lang={lang} setLang={setLang} isRTL={isRTL} />
 
-      <div ref={refs.home}><HeroSection onNav={scrollTo} /></div>
-      <div ref={refs.prayers}><PrayerTimesSection /></div>
-      <AdhanPlayerSection />
-      <QiblaSection />
+      <div ref={refs.home}><HeroSection onNav={scrollTo} t={t} /></div>
+      <div ref={refs.prayers}><PrayerTimesSection t={t} /></div>
+      <AdhanPlayerSection t={t} />
+      <QiblaSection t={t} />
       <div ref={refs.mosques}>
-        <MosquesSection toast={msg => setToastMsg(msg)} />
+        <MosquesSection toast={msg => setToastMsg(msg)} t={t} />
       </div>
-      <div ref={refs.donate}><DonationsSection toast={msg => setToastMsg(msg)} /></div>
-      <div ref={refs.complaint}><ComplaintSection toast={msg => setToastMsg(msg)} /></div>
-      <AboutSection />
-      <Footer />
+      <div ref={refs.donate}><DonationsSection toast={msg => setToastMsg(msg)} t={t} /></div>
+      <div ref={refs.complaint}><ComplaintSection toast={msg => setToastMsg(msg)} t={t} /></div>
+      <AboutSection t={t} />
+      <Footer t={t} />
 
       {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg(null)} />}
     </div>
