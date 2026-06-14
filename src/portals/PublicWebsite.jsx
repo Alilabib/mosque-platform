@@ -28,14 +28,14 @@ const T = {
    MOCK DATA
    ══════════════════════════════════ */
 const MOSQUES = [
-  { id: 1, name: "جامع الراجحي", city: "الرياض", district: "حي النسيم", type: "جامع", capacity: 3500, services: ["الجمعة","الجنائز","العيد","التحفيظ"], rating: 4.8, reviews: 234, imam: "الشيخ عبدالله المحمد" },
+  { id: 1, name: "جامع الراجحي", city: "الرياض", district: "حي النسيم", type: "جامع", capacity: 3500, services: ["الجمعة","الجنائز","العيد","التحفيظ","مصلى نساء","دروس نساء","حلقات تحفيظ نساء"], rating: 4.8, reviews: 234, imam: "الشيخ عبدالله المحمد" },
   { id: 2, name: "مسجد الفرقان", city: "الرياض", district: "حي الملز", type: "مسجد", capacity: 800, services: ["الجمعة","التحفيظ"], rating: 4.5, reviews: 89, imam: "الشيخ خالد العتيبي" },
-  { id: 3, name: "جامع الملك فهد", city: "جدة", district: "حي الحمراء", type: "جامع", capacity: 5000, services: ["الجمعة","الجنائز","العيد","التحفيظ","المحاضرات"], rating: 4.9, reviews: 512, imam: "الشيخ سعد الغامدي" },
-  { id: 4, name: "مسجد الإيمان", city: "مكة المكرمة", district: "حي العزيزية", type: "مسجد", capacity: 1200, services: ["الجمعة","التحفيظ","المحاضرات"], rating: 4.6, reviews: 178, imam: "الشيخ أحمد الشهري" },
-  { id: 5, name: "جامع البواردي", city: "الرياض", district: "حي العليا", type: "جامع", capacity: 2800, services: ["الجمعة","الجنائز","العيد"], rating: 4.7, reviews: 301, imam: "الشيخ فهد القحطاني" },
-  { id: 6, name: "مسجد النور", city: "المدينة المنورة", district: "حي قباء", type: "مسجد", capacity: 950, services: ["الجمعة","التحفيظ"], rating: 4.8, reviews: 145, imam: "الشيخ ياسر الحربي" },
+  { id: 3, name: "جامع الملك فهد", city: "جدة", district: "حي الحمراء", type: "جامع", capacity: 5000, services: ["الجمعة","الجنائز","العيد","التحفيظ","المحاضرات","مصلى نساء","حلقات تحفيظ نساء"], rating: 4.9, reviews: 512, imam: "الشيخ سعد الغامدي" },
+  { id: 4, name: "مسجد الإيمان", city: "مكة المكرمة", district: "حي العزيزية", type: "مسجد", capacity: 1200, services: ["الجمعة","التحفيظ","المحاضرات","مصلى نساء","دروس نساء"], rating: 4.6, reviews: 178, imam: "الشيخ أحمد الشهري" },
+  { id: 5, name: "جامع البواردي", city: "الرياض", district: "حي العليا", type: "جامع", capacity: 2800, services: ["الجمعة","الجنائز","العيد","مصلى نساء"], rating: 4.7, reviews: 301, imam: "الشيخ فهد القحطاني" },
+  { id: 6, name: "مسجد النور", city: "المدينة المنورة", district: "حي قباء", type: "مسجد", capacity: 950, services: ["الجمعة","التحفيظ","مصلى نساء","دروس نساء","حلقات تحفيظ نساء"], rating: 4.8, reviews: 145, imam: "الشيخ ياسر الحربي" },
   { id: 7, name: "مسجد التقوى", city: "الدمام", district: "حي الفيصلية", type: "مسجد", capacity: 700, services: ["الجمعة","الدروس"], rating: 4.4, reviews: 67, imam: "الشيخ محمد الدوسري" },
-  { id: 8, name: "جامع الأمير سلطان", city: "جدة", district: "حي الروضة", type: "جامع", capacity: 4200, services: ["الجمعة","الجنائز","العيد","التحفيظ","المحاضرات"], rating: 4.9, reviews: 478, imam: "الشيخ ماجد الزهراني" },
+  { id: 8, name: "جامع الأمير سلطان", city: "جدة", district: "حي الروضة", type: "جامع", capacity: 4200, services: ["الجمعة","الجنائز","العيد","التحفيظ","المحاضرات","مصلى نساء","دروس نساء","حلقات تحفيظ نساء"], rating: 4.9, reviews: 478, imam: "الشيخ ماجد الزهراني" },
 ];
 
 const PRAYER_DATA = {
@@ -88,7 +88,7 @@ function IslamicPattern({ opacity = 0.04, color = T.emerald }) {
    SHARED COMPONENTS
    ══════════════════════════════════ */
 function Badge({ text, color = "green" }) {
-  const map = { green: [T.emeraldLight, T.emerald], gold: [T.goldLight, T.gold], gray: ["#f0eeea", T.text2], red: [T.dangerLight, T.danger], blue: ["#e7f1f8", "#1d6fa5"] };
+  const map = { green: [T.emeraldLight, T.emerald], gold: [T.goldLight, T.gold], gray: ["#f0eeea", T.text2], red: [T.dangerLight, T.danger], blue: ["#e7f1f8", "#1d6fa5"], purple: ["#f3e8f9", "#7c3aed"] };
   const [bg, fg] = map[color] || map.green;
   return <span style={{ background: bg, color: fg, padding: "4px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, display: "inline-block" }}>{text}</span>;
 }
@@ -648,9 +648,10 @@ function MosquesSection({ toast }) {
                 <span style={{ fontSize: 12, color: T.text3 }}>({m.reviews} تقييم)</span>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-                {m.services.slice(0, 4).map((s, i) => (
-                  <span key={i} style={{ padding: "3px 10px", borderRadius: 6, background: T.cream, fontSize: 11.5, color: T.text2, fontWeight: 500 }}>{s}</span>
-                ))}
+                {m.services.slice(0, 5).map((s, i) => {
+                  const isWomen = s.includes("نساء");
+                  return <span key={i} style={{ padding: "3px 10px", borderRadius: 6, background: isWomen ? "#f3e8f9" : T.cream, fontSize: 11.5, color: isWomen ? "#7c3aed" : T.text2, fontWeight: 500 }}>{s}</span>;
+                })}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: T.text3, marginBottom: 16 }}>
                 <span>👤 {m.imam}</span>
@@ -711,7 +712,7 @@ function MosquesSection({ toast }) {
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: T.text }}>الخدمات المتاحة</h3>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {selectedMosque.services.map((s, i) => <Badge key={i} text={s} color="green" />)}
+                    {selectedMosque.services.map((s, i) => <Badge key={i} text={s} color={s.includes("نساء") ? "purple" : "green"} />)}
                   </div>
                   <h3 style={{ fontSize: 16, fontWeight: 700, margin: "24px 0 16px", color: T.text }}>تقييم المسجد</h3>
                   <RatingForm mosque={selectedMosque} toast={toast} />

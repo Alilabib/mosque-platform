@@ -60,6 +60,23 @@ const SCHEDULE = [
   { day: "الأحد", fajr: false, dhuhr: true, asr: true, maghrib: false, isha: false },
 ];
 
+const SERVICE_CATEGORIES = [
+  { id: "maintenance", label: "صيانة عامة", icon: "🔧" },
+  { id: "electrical", label: "كهرباء", icon: "⚡" },
+  { id: "plumbing", label: "سباكة", icon: "🚿" },
+  { id: "ac", label: "تكييف وتدفئة", icon: "❄️" },
+  { id: "security", label: "أمن وسلامة", icon: "🔒" },
+  { id: "cleaning", label: "نظافة", icon: "🧹" },
+  { id: "assets", label: "أصول ومعدات", icon: "📦" },
+  { id: "landscaping", label: "تنسيق حدائق", icon: "🌿" },
+];
+
+const INITIAL_SERVICE_REQUESTS = [
+  { id: "SR-001", category: "ac", description: "عطل في مكيف الجهة اليمنى — لا يعمل على وضع التبريد", priority: "عالية", status: "قيد المعالجة", date: "٨ يونيو ٢٠٢٦", adminNote: "تم إرسال فني الصيانة — موعد الإصلاح الأحد" },
+  { id: "SR-002", category: "electrical", description: "إضاءة ممر الدخول الرئيسي لا تعمل منذ يومين", priority: "متوسطة", status: "مكتملة", date: "٣ يونيو ٢٠٢٦", adminNote: "تم استبدال اللمبات وإصلاح التوصيلات" },
+  { id: "SR-003", category: "cleaning", description: "السجاد بحاجة إلى تنظيف عميق خاصة في الصفوف الأمامية", priority: "منخفضة", status: "معلقة", date: "١٠ يونيو ٢٠٢٦", adminNote: "" },
+];
+
 /* ══════════════════════════════════
    SHARED COMPONENTS
    ══════════════════════════════════ */
@@ -572,6 +589,218 @@ function MosqueTab({ toast }) {
 }
 
 /* ══════════════════════════════════
+   TAB: SERVICE REQUESTS
+   ══════════════════════════════════ */
+function ServiceRequestsTab({ serviceRequests, setServiceRequests, toast }) {
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ category: "", description: "", priority: "متوسطة" });
+  const [filter, setFilter] = useState("all");
+  const [viewReq, setViewReq] = useState(null);
+
+  const catLabel = id => SERVICE_CATEGORIES.find(c => c.id === id)?.label || id;
+  const catIcon = id => SERVICE_CATEGORIES.find(c => c.id === id)?.icon || "🔧";
+
+  const statusColor = s => s === "معلقة" ? "orange" : s === "قيد المعالجة" ? "blue" : s === "مكتملة" ? "green" : s === "مرفوضة" ? "red" : "gray";
+  const priorityColor = p => p === "عالية" ? "red" : p === "متوسطة" ? "orange" : "gray";
+
+  const filtered = filter === "all" ? serviceRequests : serviceRequests.filter(r => r.status === filter);
+
+  const submitRequest = () => {
+    if (!form.category || !form.description) return;
+    const newReq = {
+      id: `SR-${String(serviceRequests.length + 1).padStart(3, "0")}`,
+      category: form.category,
+      description: form.description,
+      priority: form.priority,
+      status: "معلقة",
+      date: "١٤ يونيو ٢٠٢٦",
+      adminNote: "",
+    };
+    setServiceRequests(prev => [newReq, ...prev]);
+    setForm({ category: "", description: "", priority: "متوسطة" });
+    setShowForm(false);
+    toast("تم إرسال طلب الخدمة بنجاح ✓");
+  };
+
+  // Detail view
+  if (viewReq) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <button onClick={() => setViewReq(null)} style={{ background: "none", border: "none", fontSize: 14, color: C.primary, cursor: "pointer", fontFamily: "inherit", fontWeight: 600, textAlign: "right", padding: 0 }}>→ العودة</button>
+
+        <PageCard>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 12 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: C.primary }}>{viewReq.id}</span>
+            <Badge text={viewReq.status} color={statusColor(viewReq.status)} />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 28 }}>{catIcon(viewReq.category)}</span>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 700 }}>{catLabel(viewReq.category)}</div>
+              <div style={{ fontSize: 12, color: C.text2 }}>{viewReq.date}</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 14, lineHeight: 1.8, color: C.text, marginBottom: 16, padding: 14, background: C.borderL, borderRadius: 12 }}>
+            {viewReq.description}
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <Badge text={`أولوية: ${viewReq.priority}`} color={priorityColor(viewReq.priority)} />
+            <Badge text={IMAM.mosque} color="gray" />
+          </div>
+        </PageCard>
+
+        {/* Status timeline */}
+        <PageCard>
+          <SectionTitle title="تتبع الحالة" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {[
+              { label: "تم الإرسال", done: true, detail: viewReq.date },
+              { label: "قيد المراجعة", done: viewReq.status !== "معلقة", detail: viewReq.status !== "معلقة" ? "تمت المراجعة من الإدارة" : "بانتظار مراجعة الإدارة" },
+              { label: "قيد المعالجة", done: viewReq.status === "قيد المعالجة" || viewReq.status === "مكتملة", detail: viewReq.status === "قيد المعالجة" ? "يتم العمل على الطلب" : viewReq.status === "مكتملة" ? "تم التنفيذ" : "" },
+              { label: "مكتملة", done: viewReq.status === "مكتملة", detail: viewReq.status === "مكتملة" ? "تم إنهاء الطلب بنجاح" : "" },
+            ].map((step, i, arr) => (
+              <div key={i} style={{ display: "flex", gap: 14 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: step.done ? C.primary : C.borderL, border: `2px solid ${step.done ? C.primary : C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: step.done ? C.white : C.text3, flexShrink: 0 }}>
+                    {step.done ? "✓" : i + 1}
+                  </div>
+                  {i < arr.length - 1 && <div style={{ width: 2, height: 32, background: step.done ? C.primary : C.borderL }} />}
+                </div>
+                <div style={{ paddingBottom: i < arr.length - 1 ? 16 : 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: step.done ? C.text : C.text3 }}>{step.label}</div>
+                  {step.detail && <div style={{ fontSize: 12, color: C.text2, marginTop: 2 }}>{step.detail}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </PageCard>
+
+        {viewReq.adminNote && (
+          <PageCard>
+            <SectionTitle title="ملاحظات الإدارة" />
+            <div style={{ padding: 14, background: C.infoLight, borderRadius: 12, fontSize: 14, lineHeight: 1.7, color: C.text, border: `1px solid ${C.info}22` }}>
+              💬 {viewReq.adminNote}
+            </div>
+          </PageCard>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Header with new request button */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>طلبات الخدمة</h2>
+        <Btn small icon="+" onClick={() => setShowForm(true)}>طلب جديد</Btn>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+        {[
+          { n: serviceRequests.filter(r => r.status === "معلقة").length, l: "معلقة", bg: C.warnLight, fg: C.warn },
+          { n: serviceRequests.filter(r => r.status === "قيد المعالجة").length, l: "قيد المعالجة", bg: C.infoLight, fg: C.info },
+          { n: serviceRequests.filter(r => r.status === "مكتملة").length, l: "مكتملة", bg: C.primaryLight, fg: C.primary },
+        ].map((s, i) => (
+          <div key={i} style={{ textAlign: "center", padding: 14, background: s.bg, borderRadius: 14 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: s.fg }}>{s.n}</div>
+            <div style={{ fontSize: 11, color: C.text2, marginTop: 2 }}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{ display: "flex", gap: 4, background: C.borderL, borderRadius: 10, padding: 3 }}>
+        {[{ id: "all", label: "الكل" }, { id: "معلقة", label: "معلقة" }, { id: "قيد المعالجة", label: "قيد المعالجة" }, { id: "مكتملة", label: "مكتملة" }].map(t => (
+          <button key={t.id} onClick={() => setFilter(t.id)} style={{ flex: 1, padding: "8px 6px", borderRadius: 8, border: "none", background: filter === t.id ? C.card : "transparent", color: filter === t.id ? C.primary : C.text2, fontWeight: filter === t.id ? 700 : 500, fontSize: 12, cursor: "pointer", fontFamily: "inherit", boxShadow: filter === t.id ? "0 1px 4px rgba(0,0,0,.06)" : "none" }}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* Request list */}
+      <PageCard>
+        {filtered.length > 0 ? filtered.map((r, i) => (
+          <div key={r.id} onClick={() => setViewReq(r)} style={{
+            display: "flex", alignItems: "center", gap: 12, padding: "14px 0",
+            borderBottom: i < filtered.length - 1 ? `1px solid ${C.borderL}` : "none", cursor: "pointer",
+          }}>
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: C.borderL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
+              {catIcon(r.category)}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <span style={{ fontSize: 14, fontWeight: 700 }}>{catLabel(r.category)}</span>
+                <Badge text={r.status} color={statusColor(r.status)} />
+              </div>
+              <div style={{ fontSize: 12.5, color: C.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.description}</div>
+              <div style={{ display: "flex", gap: 8, marginTop: 4, fontSize: 11, color: C.text3 }}>
+                <span>{r.id}</span><span>·</span><span>{r.date}</span><span>·</span><Badge text={r.priority} color={priorityColor(r.priority)} />
+              </div>
+            </div>
+          </div>
+        )) : <EmptyState icon="📋" msg="لا توجد طلبات بهذا التصنيف" />}
+      </PageCard>
+
+      {/* New request modal */}
+      {showForm && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 999, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={() => setShowForm(false)}>
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.4)" }} />
+          <div onClick={e => e.stopPropagation()} style={{
+            position: "relative", background: C.card, borderRadius: "22px 22px 0 0", width: "100%", maxWidth: 480,
+            padding: 24, animation: "sheetUp .25s ease", maxHeight: "80vh", overflow: "auto",
+          }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: C.border, margin: "0 auto 16px" }} />
+            <h3 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 700 }}>طلب خدمة جديد</h3>
+
+            {/* Category selection */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8 }}>نوع الخدمة *</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {SERVICE_CATEGORIES.map(cat => (
+                  <button key={cat.id} onClick={() => setForm(p => ({ ...p, category: cat.id }))} style={{
+                    padding: "12px 10px", borderRadius: 12, border: `1.5px solid ${form.category === cat.id ? C.primary : C.border}`,
+                    background: form.category === cat.id ? C.primaryLight : C.white, cursor: "pointer", fontFamily: "inherit",
+                    display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: form.category === cat.id ? 700 : 500,
+                    color: form.category === cat.id ? C.primary : C.text,
+                  }}>
+                    <span style={{ fontSize: 18 }}>{cat.icon}</span>{cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>وصف المشكلة / الطلب *</label>
+              <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3}
+                placeholder="اشرح المشكلة أو الطلب بالتفصيل..."
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 14, fontFamily: "inherit", resize: "none", boxSizing: "border-box" }} />
+            </div>
+
+            {/* Priority */}
+            <div style={{ marginBottom: 18 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>الأولوية</label>
+              <div style={{ display: "flex", gap: 8 }}>
+                {["منخفضة", "متوسطة", "عالية"].map(p => (
+                  <button key={p} onClick={() => setForm(prev => ({ ...prev, priority: p }))} style={{
+                    flex: 1, padding: "10px 8px", borderRadius: 10, border: `1.5px solid ${form.priority === p ? (p === "عالية" ? C.danger : p === "متوسطة" ? C.warn : C.border) : C.border}`,
+                    background: form.priority === p ? (p === "عالية" ? C.dangerLight : p === "متوسطة" ? C.warnLight : C.borderL) : C.white,
+                    cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: form.priority === p ? 700 : 500,
+                    color: form.priority === p ? (p === "عالية" ? C.danger : p === "متوسطة" ? C.warn : C.text2) : C.text2,
+                  }}>{p}</button>
+                ))}
+              </div>
+            </div>
+
+            <Btn full onClick={submitRequest} disabled={!form.category || !form.description}>إرسال الطلب</Btn>
+            <style>{`@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════
    TAB: PROFILE
    ══════════════════════════════════ */
 function ProfileTab({ khutbahs, toast }) {
@@ -604,10 +833,10 @@ function ProfileTab({ khutbahs, toast }) {
         <SectionTitle title="البيانات الشخصية" />
         <div style={{ display: "grid", gridTemplateColumns: "100px 1fr", gap: "12px 14px", fontSize: 14 }}>
           {[["الاسم", IMAM.name], ["المسجد", IMAM.mosque], ["المدينة", IMAM.city], ["الحي", IMAM.district], ["الدور", "إمام"], ["الحالة", "نشط"]].map(([l, v], i) => (
-            <React.Fragment key={i}>
+            <div key={i} style={{ display: "contents" }}>
               <span style={{ color: C.text2, fontWeight: 600 }}>{l}</span>
               <span>{v}</span>
-            </React.Fragment>
+            </div>
           ))}
         </div>
       </PageCard>
@@ -657,6 +886,7 @@ export default function ImamPortal() {
   const [tab, setTab] = useState("home");
   const [khutbahs, setKhutbahs] = useState(KHUTBAHS);
   const [notifications, setNotifications] = useState(NOTIFICATIONS);
+  const [serviceRequests, setServiceRequests] = useState(INITIAL_SERVICE_REQUESTS);
   const [toastMsg, setToastMsg] = useState(null);
 
   const toast = useCallback(msg => setToastMsg(msg), []);
@@ -681,6 +911,7 @@ export default function ImamPortal() {
   const TABS = [
     { id: "home", label: "الرئيسية", icon: "🏠" },
     { id: "khutbahs", label: "الخطب", icon: "📜" },
+    { id: "requests", label: "طلبات", icon: "🔧" },
     { id: "mosque", label: "المسجد", icon: "🕌" },
     { id: "profile", label: "حسابي", icon: "👤" },
   ];
@@ -722,6 +953,7 @@ export default function ImamPortal() {
       <div style={{ flex: 1, padding: "16px 16px 90px", overflow: "auto" }}>
         {tab === "home" && <HomeTab khutbahs={khutbahs} setKhutbahs={setKhutbahs} notifications={notifications} setNotifications={setNotifications} toast={toast} />}
         {tab === "khutbahs" && <KhutbahsTab khutbahs={khutbahs} setKhutbahs={setKhutbahs} toast={toast} />}
+        {tab === "requests" && <ServiceRequestsTab serviceRequests={serviceRequests} setServiceRequests={setServiceRequests} toast={toast} />}
         {tab === "mosque" && <MosqueTab toast={toast} />}
         {tab === "profile" && <ProfileTab khutbahs={khutbahs} toast={toast} />}
       </div>

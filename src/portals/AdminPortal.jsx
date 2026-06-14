@@ -70,6 +70,14 @@ const initComplaints=()=>[
   {id:"SH-0103",mosque:"جامع الملك فهد",type:"تداخل أصوات",priority:"عالية",status:"جديدة",date:"2026-06-08",source:"جمهور",desc:"تداخل أذان مع مسجد مجاور خاصة في المغرب",history:[{date:"٨ يونيو",action:"تم استلام البلاغ",by:"النظام"}]},
   {id:"SH-0104",mosque:"مسجد النور",type:"تكييف",priority:"متوسطة",status:"تم الحل",date:"2026-06-04",source:"مشرف",desc:"التكييف ضعيف في الجهة اليمنى",history:[{date:"٤ يونيو",action:"تم استلام البلاغ",by:"ياسر الحربي"},{date:"٥ يونيو",action:"تم التعيين لفريق HVAC",by:"فهد الشمري"},{date:"٦ يونيو",action:"تم الحل — استبدال فلتر",by:"ناصر القحطاني"}]},
 ];
+const initServiceRequests=()=>[
+  {id:"SR-001",mosque:"جامع الراجحي",imam:"الشيخ عبدالله المحمد",category:"ac",categoryLabel:"تكييف وتدفئة",description:"عطل في مكيف الجهة اليمنى — لا يعمل على وضع التبريد",priority:"عالية",status:"قيد المعالجة",date:"2026-06-08",adminNote:"تم إرسال فني الصيانة — موعد الإصلاح الأحد"},
+  {id:"SR-002",mosque:"جامع الراجحي",imam:"الشيخ عبدالله المحمد",category:"electrical",categoryLabel:"كهرباء",description:"إضاءة ممر الدخول الرئيسي لا تعمل منذ يومين",priority:"متوسطة",status:"مكتملة",date:"2026-06-03",adminNote:"تم استبدال اللمبات وإصلاح التوصيلات"},
+  {id:"SR-003",mosque:"جامع الراجحي",imam:"الشيخ عبدالله المحمد",category:"cleaning",categoryLabel:"نظافة",description:"السجاد بحاجة إلى تنظيف عميق خاصة في الصفوف الأمامية",priority:"منخفضة",status:"معلقة",date:"2026-06-10",adminNote:""},
+  {id:"SR-004",mosque:"مسجد الفرقان",imam:"الشيخ خالد العتيبي",category:"plumbing",categoryLabel:"سباكة",description:"تسرب مياه في دورة المياه الشمالية",priority:"عالية",status:"معلقة",date:"2026-06-12",adminNote:""},
+  {id:"SR-005",mosque:"جامع الملك فهد",imam:"الشيخ سعد الغامدي",category:"security",categoryLabel:"أمن وسلامة",description:"كاميرا المراقبة في المدخل الرئيسي لا تعمل",priority:"متوسطة",status:"قيد المعالجة",date:"2026-06-11",adminNote:"تم التواصل مع شركة الصيانة"},
+  {id:"SR-006",mosque:"مسجد الإيمان",imam:"الشيخ أحمد الشهري",category:"assets",categoryLabel:"أصول ومعدات",description:"الحاجة لاستبدال ميكروفون المنبر — جودة الصوت ضعيفة",priority:"متوسطة",status:"معلقة",date:"2026-06-13",adminNote:""},
+];
 const initDonations=()=>[
   {id:1,project:"بناء مسجد حي السلام",type:"بناء",target:2500000,collected:1875000,status:"نشط",donors:342},
   {id:2,project:"صيانة جامع الراجحي",type:"صيانة",target:150000,collected:150000,status:"مكتمل",donors:89},
@@ -79,7 +87,7 @@ const initDonations=()=>[
 
 const PRAYERS=[{name:"الفجر",adhan:"٣:٣٢",iqama:"٣:٥٢",done:true,vol:75},{name:"الظهر",adhan:"١١:٥٢",iqama:"١٢:٠٧",done:true,vol:70},{name:"العصر",adhan:"٣:١٣",iqama:"٣:٢٨",done:false,vol:70},{name:"المغرب",adhan:"٦:٤١",iqama:"٦:٥١",done:false,vol:75},{name:"العشاء",adhan:"٨:١١",iqama:"٨:٢٦",done:false,vol:65}];
 const AUDIT_LOGS=[{time:"١٠:٣٢ ص",user:"أحمد العمري",action:"اعتماد صوت أذان جديد",detail:"أذان الحرم ٢"},{time:"٠٩:١٥ ص",user:"فهد الشمري",action:"تعديل مستوى صوت",detail:"الفجر: ٧٠→٧٥"},{time:"٠٨:٤٥ ص",user:"محمد الحربي",action:"إغلاق تذكرة صيانة",detail:"TK-0044"},{time:"٠٧:٠٠ ص",user:"عبدالله المحمد",action:"تأكيد اطلاع خطبة",detail:"خطبة #1"},{time:"أمس ٤:٢٠ م",user:"سارة الخالدي",action:"إضافة مسجد",detail:"مسجد الهدى"},{time:"أمس ٢:١٥ م",user:"يوسف الزهراني",action:"مراجعة تسجيل خطبة",detail:"خطبة #2"}];
-const MODULES=[{id:"dashboard",label:"لوحة التحكم",icon:"📊"},{id:"mosques",label:"إدارة المساجد",icon:"🕌"},{id:"adhan",label:"الأذان والإقامة",icon:"🔊"},{id:"khutbah",label:"إدارة الخطب",icon:"📜"},{id:"maintenance",label:"الصيانة",icon:"🔧"},{id:"complaints",label:"الشكاوى",icon:"📋"},{id:"donations",label:"التبرعات",icon:"💰"},{id:"users",label:"المستخدمون",icon:"👥"},{id:"reports",label:"التقارير",icon:"📈"},{id:"settings",label:"الإعدادات",icon:"⚙️"}];
+const MODULES=[{id:"dashboard",label:"لوحة التحكم",icon:"📊"},{id:"mosques",label:"إدارة المساجد",icon:"🕌"},{id:"adhan",label:"الأذان والإقامة",icon:"🔊"},{id:"khutbah",label:"إدارة الخطب",icon:"📜"},{id:"maintenance",label:"الصيانة",icon:"🔧"},{id:"complaints",label:"الشكاوى",icon:"📋"},{id:"service_requests",label:"طلبات الخدمة",icon:"📩"},{id:"donations",label:"التبرعات",icon:"💰"},{id:"users",label:"المستخدمون",icon:"👥"},{id:"reports",label:"التقارير",icon:"📈"},{id:"settings",label:"الإعدادات",icon:"⚙️"}];
 
 // ═══ DASHBOARD ═══
 function Dashboard({mosques,tickets,complaints,khutbahs,donations}){
@@ -134,7 +142,7 @@ function MosquesPage({mosques,setMosques,toast}){
       <Btn small variant="danger" onClick={()=>setDelConfirm(sel)}>حذف</Btn>
     </div>
     <Tabs tabs={[{id:"info",label:"البيانات"},{id:"services",label:"الخدمات"},{id:"device",label:"الأجهزة"}]} active={detailTab} onChange={setDetailTab}/>
-    {detailTab==="info"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}><Card title="بيانات المسجد"><div style={{display:"grid",gridTemplateColumns:"100px 1fr",gap:"10px 14px",fontSize:13.5}}>{[["النوع",sel.type],["المدينة",sel.city],["الحي",sel.district],["السعة",`${sel.capacity} مصلي`],["الإمام",sel.imam],["الحالة",sel.status]].map(([l,v],i)=><React.Fragment key={i}><span style={{color:C.text2,fontWeight:600}}>{l}</span><span>{v}</span></React.Fragment>)}</div></Card><Card title="إحصائيات"><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><div style={{textAlign:"center",padding:14,background:C.primaryLight,borderRadius:10}}><div style={{fontSize:24,fontWeight:700}}>{sel.services.length}</div><div style={{fontSize:12,color:C.text2}}>خدمات</div></div><div style={{textAlign:"center",padding:14,background:C.infoLight,borderRadius:10}}><div style={{fontSize:24,fontWeight:700}}>{sel.capacity}</div><div style={{fontSize:12,color:C.text2}}>السعة</div></div></div></Card></div>}
+    {detailTab==="info"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}><Card title="بيانات المسجد"><div style={{display:"grid",gridTemplateColumns:"100px 1fr",gap:"10px 14px",fontSize:13.5}}>{[["النوع",sel.type],["المدينة",sel.city],["الحي",sel.district],["السعة",`${sel.capacity} مصلي`],["الإمام",sel.imam],["الحالة",sel.status]].map(([l,v],i)=><div key={i} style={{ display: "contents" }}><span style={{color:C.text2,fontWeight:600}}>{l}</span><span>{v}</span></div>)}</div></Card><Card title="إحصائيات"><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><div style={{textAlign:"center",padding:14,background:C.primaryLight,borderRadius:10}}><div style={{fontSize:24,fontWeight:700}}>{sel.services.length}</div><div style={{fontSize:12,color:C.text2}}>خدمات</div></div><div style={{textAlign:"center",padding:14,background:C.infoLight,borderRadius:10}}><div style={{fontSize:24,fontWeight:700}}>{sel.capacity}</div><div style={{fontSize:12,color:C.text2}}>السعة</div></div></div></Card></div>}
     {detailTab==="services"&&<Card title="الخدمات"><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{sel.services.length?sel.services.map((s,i)=><Badge key={i} text={s} color="green"/>):<span style={{color:C.text3}}>لا توجد خدمات</span>}</div></Card>}
     {detailTab==="device"&&<Card title="نظام الصوت"><div style={{display:"flex",flexDirection:"column",gap:10}}><div style={{display:"flex",alignItems:"center",gap:8}}><div style={{width:12,height:12,borderRadius:"50%",background:sel.device==="متصل"?"#27ae60":sel.device==="غير متصل"?C.danger:C.warn}}/><span style={{fontWeight:600}}>{sel.device}</span></div><div style={{fontSize:13,color:C.text2}}>آخر Heartbeat: قبل ٣ دقائق</div><div style={{fontSize:13,color:C.text2}}>إصدار: v2.1.4</div><div style={{fontSize:13,color:C.text2}}>الجدول المحلي: محدّث</div></div></Card>}
     <Confirm open={!!delConfirm} onClose={()=>setDelConfirm(null)} onOk={del} title="حذف المسجد" msg={`هل أنت متأكد من حذف "${delConfirm?.name}"؟ هذا الإجراء لا يمكن التراجع عنه.`}/>
@@ -189,7 +197,7 @@ function ComplaintsPage({complaints,setComplaints,mosques,toast}){
   if(detail){return<div style={{display:"flex",flexDirection:"column",gap:16}}>
     <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={()=>setDetail(null)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:C.primary}}>→</button><h2 style={{margin:0,fontSize:20,fontWeight:700}}>شكوى {detail.id}</h2><Badge text={detail.status} color={detail.status==="تم الحل"?"green":detail.status==="جديدة"?"red":"orange"}/></div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-      <Card title="تفاصيل الشكوى"><div style={{display:"grid",gridTemplateColumns:"90px 1fr",gap:"10px 12px",fontSize:13.5}}>{[["المسجد",detail.mosque],["النوع",detail.type],["المصدر",detail.source],["الأولوية",detail.priority],["التاريخ",detail.date]].map(([l,v],i)=><React.Fragment key={i}><span style={{color:C.text2,fontWeight:600}}>{l}</span><span>{v}</span></React.Fragment>)}</div><div style={{marginTop:14,padding:12,background:"#fafaf8",borderRadius:10,fontSize:13,lineHeight:1.8}}>{detail.desc}</div>{detail.status!=="تم الحل"&&<div style={{marginTop:14}}><Btn onClick={()=>resolve(detail)}>حل الشكوى ✓</Btn></div>}</Card>
+      <Card title="تفاصيل الشكوى"><div style={{display:"grid",gridTemplateColumns:"90px 1fr",gap:"10px 12px",fontSize:13.5}}>{[["المسجد",detail.mosque],["النوع",detail.type],["المصدر",detail.source],["الأولوية",detail.priority],["التاريخ",detail.date]].map(([l,v],i)=><div key={i} style={{ display: "contents" }}><span style={{color:C.text2,fontWeight:600}}>{l}</span><span>{v}</span></div>)}</div><div style={{marginTop:14,padding:12,background:"#fafaf8",borderRadius:10,fontSize:13,lineHeight:1.8}}>{detail.desc}</div>{detail.status!=="تم الحل"&&<div style={{marginTop:14}}><Btn onClick={()=>resolve(detail)}>حل الشكوى ✓</Btn></div>}</Card>
       <Card title="سجل المتابعة"><div style={{position:"relative",paddingRight:20}}>{detail.history?.map((h,i)=><div key={i} style={{display:"flex",gap:12,marginBottom:16,position:"relative"}}><div style={{width:12,height:12,borderRadius:"50%",background:i===detail.history.length-1?C.primary:C.border,border:`2px solid ${C.card}`,flexShrink:0,marginTop:3,zIndex:1}}/>{i<detail.history.length-1&&<div style={{position:"absolute",right:25,top:15,width:2,height:"calc(100% + 4px)",background:C.borderL}}/>}<div><div style={{fontSize:13,fontWeight:600}}>{h.action}</div><div style={{fontSize:11.5,color:C.text3}}>{h.date} — {h.by}</div></div></div>)}</div></Card>
     </div>
   </div>;}
@@ -202,6 +210,58 @@ function ComplaintsPage({complaints,setComplaints,mosques,toast}){
   </div>;
 }
 
+// ═══ SERVICE REQUESTS ═══
+function ServiceRequestsPage({serviceRequests,setServiceRequests,mosques,toast}){
+  const[search,setSearch]=useState("");const[filter,setFilter]=useState("الكل");const[detail,setDetail]=useState(null);const[noteModal,setNoteModal]=useState(null);const[noteText,setNoteText]=useState("");
+  const prC=p=>p==="عالية"?"red":p==="متوسطة"?"orange":"gray";
+  const stC=s=>s==="مكتملة"?"green":s==="قيد المعالجة"?"blue":s==="معلقة"?"orange":s==="مرفوضة"?"red":"gray";
+  const filtered=serviceRequests.filter(r=>{if(filter!=="الكل"&&r.status!==filter)return false;return r.mosque.includes(search)||r.imam.includes(search)||r.categoryLabel.includes(search)||r.id.includes(search);});
+
+  const changeStatus=(req,newStatus)=>{setServiceRequests(p=>p.map(r=>r.id===req.id?{...r,status:newStatus}:r));if(detail?.id===req.id)setDetail({...req,status:newStatus});toast(`تم تحديث حالة ${req.id} إلى "${newStatus}" ✓`,"success");};
+  const saveNote=()=>{if(!noteModal||!noteText)return;setServiceRequests(p=>p.map(r=>r.id===noteModal.id?{...r,adminNote:noteText}:r));if(detail?.id===noteModal.id)setDetail({...noteModal,adminNote:noteText});setNoteModal(null);setNoteText("");toast("تم حفظ الملاحظة ✓","success");};
+
+  if(detail){return<div style={{display:"flex",flexDirection:"column",gap:16}}>
+    <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={()=>setDetail(null)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:C.primary}}>→</button><h2 style={{margin:0,fontSize:20,fontWeight:700}}>طلب خدمة {detail.id}</h2><Badge text={detail.status} color={stC(detail.status)}/><Badge text={detail.priority} color={prC(detail.priority)}/></div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+      <Card title="تفاصيل الطلب"><div style={{display:"grid",gridTemplateColumns:"100px 1fr",gap:"10px 14px",fontSize:13.5}}>
+        {[["رقم الطلب",detail.id],["المسجد",detail.mosque],["الإمام",detail.imam],["نوع الخدمة",detail.categoryLabel],["الأولوية",detail.priority],["التاريخ",detail.date],["الحالة",detail.status]].map(([l,v],i)=><div key={i} style={{display:"contents"}}><span style={{color:C.text2,fontWeight:600}}>{l}</span><span>{v}</span></div>)}
+      </div>
+        <div style={{marginTop:14,padding:14,background:"#fafaf8",borderRadius:10,fontSize:13.5,lineHeight:1.8}}><div style={{fontSize:12,fontWeight:600,color:C.text2,marginBottom:6}}>وصف الطلب:</div>{detail.description}</div>
+        {detail.adminNote&&<div style={{marginTop:10,padding:14,background:C.infoLight,borderRadius:10,fontSize:13.5,lineHeight:1.8,border:`1px solid ${C.info}22`}}><div style={{fontSize:12,fontWeight:600,color:C.info,marginBottom:6}}>ملاحظات الإدارة:</div>{detail.adminNote}</div>}
+      </Card>
+      <Card title="الإجراءات">
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>تغيير الحالة:</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            {[{label:"معلقة",color:C.warn},{label:"قيد المعالجة",color:C.info},{label:"مكتملة",color:C.primary},{label:"مرفوضة",color:C.danger}].map(s=><button key={s.label} onClick={()=>changeStatus(detail,s.label)} disabled={detail.status===s.label} style={{padding:"10px 12px",borderRadius:9,border:`1.5px solid ${detail.status===s.label?s.color:C.border}`,background:detail.status===s.label?s.color+"18":C.white,color:detail.status===s.label?s.color:C.text2,fontSize:13,fontWeight:detail.status===s.label?700:500,cursor:detail.status===s.label?"default":"pointer",fontFamily:"inherit"}}>{s.label}</button>)}
+          </div>
+          <div style={{borderTop:`1px solid ${C.borderL}`,paddingTop:14,marginTop:8}}>
+            <Btn full icon="💬" variant="secondary" onClick={()=>{setNoteModal(detail);setNoteText(detail.adminNote||"");}}>إضافة / تعديل ملاحظة</Btn>
+          </div>
+        </div>
+      </Card>
+    </div>
+    <Modal open={!!noteModal} onClose={()=>setNoteModal(null)} title={`ملاحظة — ${noteModal?.id||""}`} width={480}><Field label="ملاحظات الإدارة"><Textarea value={noteText} onChange={setNoteText} rows={4} placeholder="أضف ملاحظة للإمام حول حالة الطلب..."/></Field><div style={{display:"flex",gap:10}}><Btn onClick={saveNote} disabled={!noteText}>حفظ</Btn><Btn variant="secondary" onClick={()=>setNoteModal(null)}>إلغاء</Btn></div></Modal>
+  </div>;}
+
+  return<div style={{display:"flex",flexDirection:"column",gap:16}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><h2 style={{margin:0,fontSize:20,fontWeight:700}}>طلبات الخدمة من الأئمة</h2><Btn small variant="ghost" onClick={()=>exportCSV([{label:"الرقم",csvKey:"id"},{label:"المسجد",csvKey:"mosque"},{label:"الإمام",csvKey:"imam"},{label:"النوع",csvKey:"categoryLabel"},{label:"الأولوية",csvKey:"priority"},{label:"الحالة",csvKey:"status"},{label:"التاريخ",csvKey:"date"}],serviceRequests,"service_requests")}>تصدير CSV</Btn></div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:10}}><Stat icon="📩" label="معلقة" value={serviceRequests.filter(r=>r.status==="معلقة").length} bg={C.warnLight}/><Stat icon="🔄" label="قيد المعالجة" value={serviceRequests.filter(r=>r.status==="قيد المعالجة").length} bg={C.infoLight}/><Stat icon="✅" label="مكتملة" value={serviceRequests.filter(r=>r.status==="مكتملة").length} bg="#e8f5f0"/><Stat icon="📋" label="الإجمالي" value={serviceRequests.length} bg={C.primaryLight}/></div>
+    <Card title="الطلبات" action={<div style={{display:"flex",gap:8,alignItems:"center"}}><div style={{display:"flex",gap:3}}>{["الكل","معلقة","قيد المعالجة","مكتملة","مرفوضة"].map(s=><button key={s} onClick={()=>setFilter(s)} style={{padding:"4px 11px",borderRadius:14,border:"none",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",background:filter===s?C.primary:C.borderL,color:filter===s?C.white:C.text2}}>{s}</button>)}</div><SearchBar value={search} onChange={setSearch}/></div>} noPad>
+      <Table cols={[
+        {label:"الرقم",render:r=><span style={{fontWeight:700,color:C.primary}}>{r.id}</span>},
+        {label:"المسجد",render:r=>r.mosque},
+        {label:"الإمام",render:r=><span style={{fontSize:12.5}}>{r.imam}</span>},
+        {label:"نوع الخدمة",render:r=>r.categoryLabel},
+        {label:"الأولوية",render:r=><Badge text={r.priority} color={prC(r.priority)}/>},
+        {label:"الحالة",render:r=><Badge text={r.status} color={stC(r.status)}/>},
+        {label:"التاريخ",render:r=>r.date},
+        {label:"إجراء",render:r=>r.status==="معلقة"?<div style={{display:"flex",gap:4}}><Btn small onClick={e=>{e.stopPropagation();changeStatus(r,"قيد المعالجة");}}>قبول</Btn><Btn small variant="danger" onClick={e=>{e.stopPropagation();changeStatus(r,"مرفوضة");}}>رفض</Btn></div>:r.status==="قيد المعالجة"?<Btn small variant="secondary" onClick={e=>{e.stopPropagation();changeStatus(r,"مكتملة");}}>إكمال</Btn>:<span style={{color:C.text3,fontSize:12}}>—</span>},
+      ]} rows={filtered} onRow={setDetail}/>
+    </Card>
+  </div>;
+}
+
 // ═══ KHUTBAH ═══
 function KhutbahPage({khutbahs,setKhutbahs,toast}){
   const[modal,setModal]=useState(false);const[view,setView]=useState(null);const form0={title:"",date:"",content:"",scope:"كل المساجد"};const[form,setForm]=useState(form0);
@@ -210,7 +270,7 @@ function KhutbahPage({khutbahs,setKhutbahs,toast}){
   if(view){return<div style={{display:"flex",flexDirection:"column",gap:16}}>
     <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={()=>setView(null)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:C.primary}}>→</button><h2 style={{margin:0,fontSize:20,fontWeight:700}}>{view.title}</h2><Badge text={view.status} color={view.status==="تم الإرسال"?"green":view.status==="مسودة"?"gray":"blue"}/></div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-      <Card title="تفاصيل"><div style={{display:"grid",gridTemplateColumns:"90px 1fr",gap:"10px 12px",fontSize:13.5}}>{[["التاريخ",view.date],["الحالة",view.status],["الاطلاع",`${view.viewed}/${view.total}`],["التسجيلات",`${view.recordings}/${view.total}`]].map(([l,v],i)=><React.Fragment key={i}><span style={{color:C.text2,fontWeight:600}}>{l}</span><span>{v}</span></React.Fragment>)}</div>{view.status==="مسودة"&&<div style={{marginTop:14}}><Btn onClick={()=>send(view)}>إرسال للأئمة</Btn></div>}</Card>
+      <Card title="تفاصيل"><div style={{display:"grid",gridTemplateColumns:"90px 1fr",gap:"10px 12px",fontSize:13.5}}>{[["التاريخ",view.date],["الحالة",view.status],["الاطلاع",`${view.viewed}/${view.total}`],["التسجيلات",`${view.recordings}/${view.total}`]].map(([l,v],i)=><div key={i} style={{ display: "contents" }}><span style={{color:C.text2,fontWeight:600}}>{l}</span><span>{v}</span></div>)}</div>{view.status==="مسودة"&&<div style={{marginTop:14}}><Btn onClick={()=>send(view)}>إرسال للأئمة</Btn></div>}</Card>
       <Card title="متابعة الالتزام"><div style={{marginBottom:12}}><Progress val={view.viewed} max={view.total}/></div>{[{name:"الشيخ عبدالله المحمد",st:"اطلع ✓",c:"green"},{name:"الشيخ خالد العتيبي",st:"اطلع ✓",c:"green"},{name:"الشيخ سعد الغامدي",st:"لم يطلع",c:"red"},{name:"الشيخ أحمد الشهري",st:"اطلع + تسجيل",c:"blue"}].map((im,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:`1px solid ${C.borderL}`,fontSize:13}}><span style={{fontWeight:600}}>{im.name}</span><Badge text={im.st} color={im.c}/></div>)}</Card>
     </div></div>;}
   return<div style={{display:"flex",flexDirection:"column",gap:16}}>
@@ -396,6 +456,7 @@ export default function App(){
   const[page,setPage]=useState("dashboard");const[collapsed,setCollapsed]=useState(false);
   const[mosques,setMosques]=useState(initMosques);const[khutbahs,setKhutbahs]=useState(initKhutbahs);
   const[tickets,setTickets]=useState(initTickets);const[complaints,setComplaints]=useState(initComplaints);
+  const[serviceRequests,setServiceRequests]=useState(initServiceRequests);
   const[donations,setDonations]=useState(initDonations);const[toastMsg,setToastMsg]=useState(null);
   const[notifOpen,setNotifOpen]=useState(false);
   const[notifs,setNotifs]=useState([{id:1,text:"جهاز جامع الملك فهد غير متصل",time:"قبل ١٥ دقيقة",read:false},{id:2,text:"تذكرة عاجلة TK-0043",time:"قبل ٣٠ دقيقة",read:false},{id:3,text:"الشيخ عبدالله أكد اطلاعه",time:"قبل ساعة",read:true}]);
@@ -407,6 +468,7 @@ export default function App(){
     case"khutbah":return<KhutbahPage khutbahs={khutbahs} setKhutbahs={setKhutbahs} toast={toast}/>;
     case"maintenance":return<MaintenancePage tickets={tickets} setTickets={setTickets} mosques={mosques} toast={toast}/>;
     case"complaints":return<ComplaintsPage complaints={complaints} setComplaints={setComplaints} mosques={mosques} toast={toast}/>;
+    case"service_requests":return<ServiceRequestsPage serviceRequests={serviceRequests} setServiceRequests={setServiceRequests} mosques={mosques} toast={toast}/>;
     case"donations":return<DonationsPage donations={donations} setDonations={setDonations} toast={toast}/>;
     case"users":return<UsersPage toast={toast}/>;
     case"reports":return<ReportsPage mosques={mosques} tickets={tickets} complaints={complaints} donations={donations} toast={toast}/>;
